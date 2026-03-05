@@ -394,6 +394,8 @@
       const [screen, setScreen] = useState('home');
       const [selectedCategories, setSelectedCategories] = useState([]);
       const [selectedFilter, setSelectedFilter] = useState('alphabetical');
+      const [showCategories, setShowCategories] = useState(false);
+      const [showMore, setShowMore] = useState(false);
       const [searchQuery, setSearchQuery] = useState('');
       const [currentPrayer, setCurrentPrayer] = useState(null);
       const [currentVignette, setCurrentVignette] = useState(null);
@@ -792,28 +794,68 @@
                   <label className="block text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">
                     Browse prayers by:
                   </label>
-                  <div className="relative">
-                    <select
-                      value={selectedFilter}
-                      onChange={(e) => setSelectedFilter(e.target.value)}
-                      className="w-full appearance-none bg-white border-2 border-indigo-200 rounded-xl px-4 py-3 pr-10 text-gray-800 font-semibold text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 shadow-sm cursor-pointer"
+                  <div className="border-2 border-indigo-200 rounded-xl overflow-hidden shadow-sm bg-white">
+
+                    {/* Alphabetically row */}
+                    <button
+                      onClick={() => setSelectedFilter('alphabetical')}
+                      className={`w-full flex items-center px-4 py-3 text-sm font-semibold text-left transition-colors ${selectedFilter === 'alphabetical' ? 'bg-indigo-600 text-white' : 'text-gray-800 hover:bg-indigo-50'}`}
                     >
-                      <option value="alphabetical">🔤 Alphabetically (All 179 Prayers)</option>
-                      <optgroup label="── Categories ──">
-                        {categories.map(cat => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.icon} {cat.name} ({prayersDatabase[cat.id]?.length || 0})
-                          </option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="── More ──">
-                        <option value="vignettes">🎬 Videos (14)</option>
-                        <option value="vignette-reading">📖 Vignettes (14)</option>
-                      </optgroup>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-indigo-500">
-                      <i data-lucide="chevron-down" className="w-5 h-5"></i>
+                      🔤 Alphabetically (All 179 Prayers)
+                    </button>
+
+                    {/* Categories accordion */}
+                    <div className="border-t border-indigo-100">
+                      <button
+                        onClick={() => { setShowCategories(!showCategories); setShowMore(false); }}
+                        className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors ${categories.some(c => c.id === selectedFilter) ? 'bg-indigo-100 text-indigo-800' : 'text-gray-700 hover:bg-indigo-50'}`}
+                      >
+                        <span>📂 Categories</span>
+                        <i data-lucide={showCategories ? 'chevron-up' : 'chevron-down'} className="w-4 h-4"></i>
+                      </button>
+                      {showCategories && (
+                        <div className="border-t border-indigo-100">
+                          {categories.map(cat => (
+                            <button
+                              key={cat.id}
+                              onClick={() => { setSelectedFilter(cat.id); setShowCategories(false); }}
+                              className={`w-full flex items-center px-6 py-2.5 text-sm text-left transition-colors border-b border-indigo-50 last:border-b-0 ${selectedFilter === cat.id ? 'bg-indigo-600 text-white font-semibold' : 'text-gray-700 hover:bg-indigo-50'}`}
+                            >
+                              <span className="mr-2">{cat.icon}</span>
+                              <span>{cat.name} ({prayersDatabase[cat.id]?.length || 0})</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
+
+                    {/* More accordion */}
+                    <div className="border-t border-indigo-100">
+                      <button
+                        onClick={() => { setShowMore(!showMore); setShowCategories(false); }}
+                        className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors ${['vignettes','vignette-reading'].includes(selectedFilter) ? 'bg-indigo-100 text-indigo-800' : 'text-gray-700 hover:bg-indigo-50'}`}
+                      >
+                        <span>⋯ More</span>
+                        <i data-lucide={showMore ? 'chevron-up' : 'chevron-down'} className="w-4 h-4"></i>
+                      </button>
+                      {showMore && (
+                        <div className="border-t border-indigo-100">
+                          <button
+                            onClick={() => { setSelectedFilter('vignettes'); setShowMore(false); }}
+                            className={`w-full flex items-center px-6 py-2.5 text-sm text-left transition-colors border-b border-indigo-50 ${selectedFilter === 'vignettes' ? 'bg-indigo-600 text-white font-semibold' : 'text-gray-700 hover:bg-indigo-50'}`}
+                          >
+                            <span className="mr-2">🎬</span><span>Videos (14)</span>
+                          </button>
+                          <button
+                            onClick={() => { setSelectedFilter('vignette-reading'); setShowMore(false); }}
+                            className={`w-full flex items-center px-6 py-2.5 text-sm text-left transition-colors ${selectedFilter === 'vignette-reading' ? 'bg-indigo-600 text-white font-semibold' : 'text-gray-700 hover:bg-indigo-50'}`}
+                          >
+                            <span className="mr-2">📖</span><span>Vignettes (14)</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                   </div>
                   <p className="text-xs text-gray-400 mt-2">
                     {selectedFilter === 'alphabetical'
