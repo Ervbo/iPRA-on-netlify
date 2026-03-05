@@ -432,6 +432,8 @@
       const [selectedFilter, setSelectedFilter] = useState('alphabetical');
       const [showCategories, setShowCategories] = useState(false);
       const [showMore, setShowMore] = useState(false);
+      const [layoutOrder, setLayoutOrder] = useState(['header','search','tabs','filter','action']);
+      const [showLayoutPicker, setShowLayoutPicker] = useState(false);
       const [searchQuery, setSearchQuery] = useState('');
 
       // ── THEME DEFINITIONS ──────────────────────────────────────────
@@ -503,6 +505,21 @@
           .text-gray-500{color:#9ca3af!important}.text-gray-400{color:#6b7280!important}
           .border-gray-200{border-color:#374151!important}.border-b{border-color:#374151!important}
           input{background-color:#1f2937!important;color:#f9fafb!important;border-color:#374151!important}
+        ` },
+        { id: 'gray', name: 'Grayscale', emoji: '🩶', css: `
+          .bg-indigo-50{background-color:#f9fafb!important}.bg-indigo-100{background-color:#f3f4f6!important}
+          .bg-indigo-200{background-color:#e5e7eb!important}.bg-indigo-500{background-color:#6b7280!important}
+          .bg-indigo-600{background-color:#4b5563!important}.bg-indigo-700{background-color:#374151!important}
+          .bg-indigo-800{background-color:#1f2937!important}.bg-indigo-900{background-color:#111827!important}
+          .bg-purple-600{background-color:#4b5563!important}.bg-purple-900{background-color:#111827!important}
+          .text-indigo-500{color:#6b7280!important}.text-indigo-600{color:#4b5563!important}
+          .text-indigo-700{color:#374151!important}.text-indigo-800{color:#1f2937!important}
+          .border-indigo-100{border-color:#f3f4f6!important}.border-indigo-200{border-color:#e5e7eb!important}
+          .border-indigo-300{border-color:#d1d5db!important}.border-indigo-500{border-color:#6b7280!important}
+          .from-indigo-600{--tw-gradient-from:#4b5563!important}.to-purple-600{--tw-gradient-to:#374151!important}
+          .from-indigo-900{--tw-gradient-from:#111827!important}.to-purple-900{--tw-gradient-to:#111827!important}
+          .focus\\:ring-indigo-500:focus{--tw-ring-color:#6b7280!important}
+          .ref-tip{background:#4b5563!important}.ref-tip::after{border-top-color:#4b5563!important}
         ` },
       ];
 
@@ -843,314 +860,398 @@
       };
 
       // Home Screen
-      const renderHome = () => (
-        <div className="flex flex-col h-full bg-gray-50">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-5 pt-12 safe-top relative">
-            <h1 className="text-2xl font-bold text-center">Prayers for Every Day Battles</h1>
-            <p className="text-sm text-center opacity-90 mt-1">Find strength for your struggles</p>
-            {/* Theme Picker */}
-            <button onClick={() => setShowThemePicker(!showThemePicker)}
-              className="absolute top-3 right-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-all"
-              title="Change theme">
-              <span style={{fontSize:'18px'}}>🎨</span>
-            </button>
+      const renderHome = () => {
+        // ── LAYOUT ITEM DEFINITIONS ──────────────────────────────────────
+        const LAYOUT_ITEMS = [
+          { id: 'header', label: 'Title',                emoji: '🏠' },
+          { id: 'search', label: 'Search Bar',           emoji: '🔍' },
+          { id: 'tabs',   label: 'Personal / Loved One', emoji: '👥' },
+          { id: 'filter', label: 'Browse Options',       emoji: '📂' },
+          { id: 'action', label: 'Access Button',        emoji: '▶️' },
+        ];
+
+        const moveItem = (idx, dir) => {
+          const o = [...layoutOrder];
+          const t = idx + dir;
+          if (t < 0 || t >= o.length) return;
+          [o[idx], o[t]] = [o[t], o[idx]];
+          setLayoutOrder(o);
+        };
+
+        // ── BLOCK RENDERERS ───────────────────────────────────────────────
+        const blocks = {
+          header: (
+            <div key="header" className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-5 pt-12 safe-top">
+              <h1 className="text-2xl font-bold text-center pr-20">Prayers for Every Day Battles</h1>
+              <p className="text-sm text-center opacity-90 mt-1">Find strength for your struggles</p>
+            </div>
+          ),
+          search: (
+            <div key="search" className="p-4 bg-white shadow-sm">
+              <div className="relative">
+                <i data-lucide="search" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"></i>
+                <input
+                  type="text"
+                  placeholder="Search battles or prayers..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          ),
+          tabs: (
+            <div key="tabs">
+              <div className="flex bg-white border-b">
+                <button
+                  onClick={() => setPrayerType('personal')}
+                  className={`flex-1 py-3 text-sm font-semibold ${
+                    prayerType === 'personal'
+                      ? 'text-indigo-600 border-b-2 border-indigo-600'
+                      : 'text-gray-500'
+                  }`}
+                >
+                  For Every Day Battles
+                </button>
+                <button
+                  onClick={() => setPrayerType('loved-one')}
+                  className={`flex-1 py-3 text-sm font-semibold ${
+                    prayerType === 'loved-one'
+                      ? 'text-indigo-600 border-b-2 border-indigo-600'
+                      : 'text-gray-500'
+                  }`}
+                >
+                  For a Loved One
+                </button>
+              </div>
+              {prayerType === 'personal' && (
+                <div className="flex bg-white border-b">
+                  <button
+                    onClick={() => setScreen('favorites')}
+                    className="ml-auto px-4 py-2 text-xs font-medium text-gray-500 hover:text-indigo-600"
+                  >
+                    ⭐ Favorites ({favorites.length})
+                  </button>
+                </div>
+              )}
+            </div>
+          ),
+          filter: (
+            <div key="filter" className="flex-1 overflow-y-auto hide-scrollbar p-4">
+              {prayerType === 'personal' ? (
+                <>
+                  {/* Filter Dropdown */}
+                  <div className="mb-5">
+                    <label className="block text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">
+                      Browse prayers by:
+                    </label>
+                    <div className="border-2 border-indigo-200 rounded-xl overflow-hidden shadow-sm bg-white">
+
+                      {/* Alphabetically row */}
+                      <button
+                        onClick={() => setSelectedFilter('alphabetical')}
+                        className={`w-full flex items-center px-4 py-3 text-sm font-semibold text-left transition-colors ${selectedFilter === 'alphabetical' ? 'bg-indigo-600 text-white' : 'text-gray-800 hover:bg-indigo-50'}`}
+                      >
+                        🔤 Alphabetically (All 179 Prayers)
+                      </button>
+
+                      {/* Categories accordion */}
+                      <div className="border-t border-indigo-100">
+                        <button
+                          onClick={() => { setShowCategories(!showCategories); setShowMore(false); }}
+                          className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors ${categories.some(c => c.id === selectedFilter) ? 'bg-indigo-100 text-indigo-800' : 'text-gray-700 hover:bg-indigo-50'}`}
+                        >
+                          <span>📂 Categories</span>
+                          <i data-lucide={showCategories ? 'chevron-up' : 'chevron-down'} className="w-4 h-4"></i>
+                        </button>
+                        {showCategories && (
+                          <div className="border-t border-indigo-100">
+                            {categories.map(cat => (
+                              <button
+                                key={cat.id}
+                                onClick={() => { setSelectedFilter(cat.id); setShowCategories(false); }}
+                                className={`w-full flex items-center px-6 py-2.5 text-sm text-left transition-colors border-b border-indigo-50 last:border-b-0 ${selectedFilter === cat.id ? 'bg-indigo-600 text-white font-semibold' : 'text-gray-700 hover:bg-indigo-50'}`}
+                              >
+                                <span className="mr-2">{cat.icon}</span>
+                                <span>{cat.name} ({prayersDatabase[cat.id]?.length || 0})</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* More accordion */}
+                      <div className="border-t border-indigo-100">
+                        <button
+                          onClick={() => { setShowMore(!showMore); setShowCategories(false); }}
+                          className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors ${['vignettes','vignette-reading'].includes(selectedFilter) ? 'bg-indigo-100 text-indigo-800' : 'text-gray-700 hover:bg-indigo-50'}`}
+                        >
+                          <span>⋯ More</span>
+                          <i data-lucide={showMore ? 'chevron-up' : 'chevron-down'} className="w-4 h-4"></i>
+                        </button>
+                        {showMore && (
+                          <div className="border-t border-indigo-100">
+                            <button
+                              onClick={() => { setSelectedFilter('vignettes'); setShowMore(false); }}
+                              className={`w-full flex items-center px-6 py-2.5 text-sm text-left transition-colors border-b border-indigo-50 ${selectedFilter === 'vignettes' ? 'bg-indigo-600 text-white font-semibold' : 'text-gray-700 hover:bg-indigo-50'}`}
+                            >
+                              <span className="mr-2">🎬</span><span>Videos (14)</span>
+                            </button>
+                            <button
+                              onClick={() => { setSelectedFilter('vignette-reading'); setShowMore(false); }}
+                              className={`w-full flex items-center px-6 py-2.5 text-sm text-left transition-colors ${selectedFilter === 'vignette-reading' ? 'bg-indigo-600 text-white font-semibold' : 'text-gray-700 hover:bg-indigo-50'}`}
+                            >
+                              <span className="mr-2">📖</span><span>Vignettes (14)</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">
+                      {selectedFilter === 'alphabetical'
+                        ? `Showing all ${getFilteredPrayers().length} prayers A–Z`
+                        : selectedFilter === 'vignettes'
+                          ? `${vignettesData.length} inspirational videos by Francis Anfuso`
+                        : selectedFilter === 'vignette-reading'
+                          ? `${vignettesReadingData.length} scripture & devotional readings`
+                          : `Showing ${getFilteredPrayers().length} prayers in ${categories.find(c => c.id === selectedFilter)?.name}`
+                      }
+                    </p>
+                  </div>
+                </>
+              ) : (
+                /* For a Loved One Form */
+                <div className="max-w-md mx-auto space-y-6">
+                  <div className="bg-white p-6 rounded-xl border border-gray-200">
+                    <h3 className="font-bold text-lg mb-4">Prayer for a Loved One</h3>
+
+                    {/* Gender Selection */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Gender:</label>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setLovedOneGender('male')}
+                          className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm ${
+                            lovedOneGender === 'male'
+                              ? 'bg-indigo-600 border-indigo-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-700'
+                          }`}
+                        >
+                          Male
+                        </button>
+                        <button
+                          onClick={() => setLovedOneGender('female')}
+                          className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm ${
+                            lovedOneGender === 'female'
+                              ? 'bg-indigo-600 border-indigo-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-700'
+                          }`}
+                        >
+                          Female
+                        </button>
+                        <button
+                          onClick={() => setLovedOneGender('multiple')}
+                          className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm ${
+                            lovedOneGender === 'multiple'
+                              ? 'bg-indigo-600 border-indigo-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-700'
+                          }`}
+                        >
+                          Multiple
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Name Input */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Name:</label>
+                      <input
+                        type="text"
+                        value={lovedOneName}
+                        onChange={(e) => setLovedOneName(e.target.value)}
+                        placeholder="Enter their name"
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+
+                    {/* Voice Selection */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Voice:</label>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setSelectedVoice('francis')}
+                          className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm ${
+                            selectedVoice === 'francis'
+                              ? 'bg-indigo-600 border-indigo-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-700'
+                          }`}
+                        >
+                          Francis
+                        </button>
+                        <button
+                          onClick={() => setSelectedVoice('jewel')}
+                          className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm ${
+                            selectedVoice === 'jewel'
+                              ? 'bg-indigo-600 border-indigo-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-700'
+                          }`}
+                        >
+                          Jewel
+                        </button>
+                        <button
+                          onClick={() => setSelectedVoice('alex')}
+                          className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm ${
+                            selectedVoice === 'alex'
+                              ? 'bg-indigo-600 border-indigo-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-700'
+                          }`}
+                        >
+                          Alex
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Prayer Preview */}
+                  {lovedOneName && (
+                    <div className="bg-amber-50 border-l-4 border-amber-400 p-5 rounded-r-xl">
+                      <p className="text-gray-700 leading-relaxed">
+                        Heavenly Father, I come before You today to lift up {lovedOneName} in prayer.
+                        {lovedOneGender === 'male' && ' I ask that You would surround him with Your presence, guide his steps, and protect him from all harm. '}
+                        {lovedOneGender === 'female' && ' I ask that You would surround her with Your presence, guide her steps, and protect her from all harm. '}
+                        {lovedOneGender === 'multiple' && ' I ask that You would surround them with Your presence, guide their steps, and protect them from all harm. '}
+                        Give {lovedOneGender === 'multiple' ? 'them' : lovedOneGender === 'female' ? 'her' : 'him'} strength for today and hope for tomorrow.
+                        Draw {lovedOneGender === 'multiple' ? 'them' : lovedOneGender === 'female' ? 'her' : 'him'} closer to You and reveal Your love in powerful ways.
+                        In Jesus' mighty name, Amen.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ),
+          action: (
+            <div key="action" className="p-4 bg-white border-t safe-bottom">
+              {prayerType === 'personal' ? (
+                <button
+                  onClick={() => setScreen(selectedFilter === 'vignettes' ? 'vignettes' : selectedFilter === 'vignette-reading' ? 'vignette-reading' : 'prayers')}
+                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg active:scale-98 transition-transform flex items-center justify-center"
+                >
+                  <i data-lucide={selectedFilter === 'vignettes' ? 'play-circle' : selectedFilter === 'vignette-reading' ? 'book-open' : 'shield'} className="w-5 h-5 mr-2"></i>
+                  {selectedFilter === 'alphabetical'
+                    ? `View All ${getFilteredPrayers().length} Prayers (A–Z)`
+                    : selectedFilter === 'vignettes'
+                      ? `Watch ${vignettesData.length} Videos`
+                      : selectedFilter === 'vignette-reading'
+                      ? `Read ${vignettesReadingData.length} Vignettes`
+                      : `View ${getFilteredPrayers().length} Prayers — ${categories.find(c => c.id === selectedFilter)?.name}`
+                  }
+                </button>
+              ) : (
+                <button
+                  onClick={() => lovedOneName && setScreen('loved-one-prayer')}
+                  disabled={!lovedOneName}
+                  className={`w-full py-4 rounded-xl font-semibold text-lg shadow-lg transition-all flex items-center justify-center ${
+                    lovedOneName
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  <i data-lucide="heart" className="w-5 h-5 mr-2"></i>
+                  Create Prayer
+                </button>
+              )}
+            </div>
+          ),
+        };
+
+        return (
+          <div className="flex flex-col h-full bg-gray-50">
+            {/* ── Fixed control buttons overlay ── */}
+            <div style={{position:'fixed',top:'12px',right:'12px',zIndex:1000,display:'flex',gap:'8px'}}>
+              <button
+                onClick={() => { setShowThemePicker(p => !p); setShowLayoutPicker(false); }}
+                style={{background:'rgba(79,70,229,0.85)',borderRadius:'50%',padding:'8px',border:'none',cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,0.3)',backdropFilter:'blur(4px)'}}
+                title="Change theme"
+              >
+                <span style={{fontSize:'18px'}}>🎨</span>
+              </button>
+              <button
+                onClick={() => { setShowLayoutPicker(p => !p); setShowThemePicker(false); }}
+                style={{background:'rgba(79,70,229,0.85)',borderRadius:'50%',padding:'8px',border:'none',cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,0.3)',backdropFilter:'blur(4px)'}}
+                title="Rearrange layout"
+              >
+                <span style={{fontSize:'18px'}}>📐</span>
+              </button>
+            </div>
+
+            {/* ── Theme Picker Panel ── */}
             {showThemePicker && (
-              <div className="absolute top-12 right-3 bg-white rounded-2xl shadow-xl p-3 z-50 border border-gray-100">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 px-1">Choose Theme</p>
-                <div className="flex flex-col gap-1">
+              <div style={{position:'fixed',top:'58px',right:'12px',zIndex:1000,background:'white',borderRadius:'16px',boxShadow:'0 8px 32px rgba(0,0,0,0.15)',padding:'12px',border:'1px solid #f3f4f6',minWidth:'170px'}}>
+                <p style={{fontSize:'11px',fontWeight:'700',color:'#6b7280',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:'8px',paddingLeft:'4px'}}>Choose Theme</p>
+                <div style={{display:'flex',flexDirection:'column',gap:'4px'}}>
                   {THEMES.map(t => (
                     <button key={t.id} onClick={() => { setCurrentTheme(t.id); setShowThemePicker(false); }}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all ${currentTheme === t.id ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}>
+                      style={{
+                        display:'flex',alignItems:'center',gap:'8px',padding:'8px 12px',borderRadius:'12px',border:'none',cursor:'pointer',fontSize:'14px',fontWeight:'600',
+                        background: currentTheme === t.id ? '#4f46e5' : 'transparent',
+                        color: currentTheme === t.id ? 'white' : '#374151',
+                      }}
+                      onMouseEnter={e => { if(currentTheme !== t.id) e.currentTarget.style.background='#f3f4f6'; }}
+                      onMouseLeave={e => { if(currentTheme !== t.id) e.currentTarget.style.background='transparent'; }}
+                    >
                       <span>{t.emoji}</span>
                       <span>{t.name}</span>
-                      {currentTheme === t.id && <span className="ml-auto">✓</span>}
+                      {currentTheme === t.id && <span style={{marginLeft:'auto'}}>✓</span>}
                     </button>
                   ))}
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Search */}
-          <div className="p-4 bg-white shadow-sm">
-            <div className="relative">
-              <i data-lucide="search" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"></i>
-              <input
-                type="text"
-                placeholder="Search battles or prayers..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {/* Prayer Type Tabs */}
-          <div className="flex bg-white border-b">
-            <button
-              onClick={() => setPrayerType('personal')}
-              className={`flex-1 py-3 text-sm font-semibold ${
-                prayerType === 'personal'
-                  ? 'text-indigo-600 border-b-2 border-indigo-600'
-                  : 'text-gray-500'
-              }`}
-            >
-              For Every Day Battles
-            </button>
-            <button
-              onClick={() => setPrayerType('loved-one')}
-              className={`flex-1 py-3 text-sm font-semibold ${
-                prayerType === 'loved-one'
-                  ? 'text-indigo-600 border-b-2 border-indigo-600'
-                  : 'text-gray-500'
-              }`}
-            >
-              For a Loved One
-            </button>
-          </div>
-
-          {/* Sub-tabs (Favorites) - only for personal prayers */}
-          {prayerType === 'personal' && (
-            <div className="flex bg-white border-b">
-              <button
-                onClick={() => setScreen('favorites')}
-                className="ml-auto px-4 py-2 text-xs font-medium text-gray-500 hover:text-indigo-600"
-              >
-                ⭐ Favorites ({favorites.length})
-              </button>
-            </div>
-          )}
-
-          {/* Content Area */}
-          <div className="flex-1 overflow-y-auto hide-scrollbar p-4">
-            {prayerType === 'personal' ? (
-              <>
-                {/* Filter Dropdown */}
-                <div className="mb-5">
-                  <label className="block text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">
-                    Browse prayers by:
-                  </label>
-                  <div className="border-2 border-indigo-200 rounded-xl overflow-hidden shadow-sm bg-white">
-
-                    {/* Alphabetically row */}
-                    <button
-                      onClick={() => setSelectedFilter('alphabetical')}
-                      className={`w-full flex items-center px-4 py-3 text-sm font-semibold text-left transition-colors ${selectedFilter === 'alphabetical' ? 'bg-indigo-600 text-white' : 'text-gray-800 hover:bg-indigo-50'}`}
-                    >
-                      🔤 Alphabetically (All 179 Prayers)
-                    </button>
-
-                    {/* Categories accordion */}
-                    <div className="border-t border-indigo-100">
-                      <button
-                        onClick={() => { setShowCategories(!showCategories); setShowMore(false); }}
-                        className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors ${categories.some(c => c.id === selectedFilter) ? 'bg-indigo-100 text-indigo-800' : 'text-gray-700 hover:bg-indigo-50'}`}
-                      >
-                        <span>📂 Categories</span>
-                        <i data-lucide={showCategories ? 'chevron-up' : 'chevron-down'} className="w-4 h-4"></i>
-                      </button>
-                      {showCategories && (
-                        <div className="border-t border-indigo-100">
-                          {categories.map(cat => (
-                            <button
-                              key={cat.id}
-                              onClick={() => { setSelectedFilter(cat.id); setShowCategories(false); }}
-                              className={`w-full flex items-center px-6 py-2.5 text-sm text-left transition-colors border-b border-indigo-50 last:border-b-0 ${selectedFilter === cat.id ? 'bg-indigo-600 text-white font-semibold' : 'text-gray-700 hover:bg-indigo-50'}`}
-                            >
-                              <span className="mr-2">{cat.icon}</span>
-                              <span>{cat.name} ({prayersDatabase[cat.id]?.length || 0})</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* More accordion */}
-                    <div className="border-t border-indigo-100">
-                      <button
-                        onClick={() => { setShowMore(!showMore); setShowCategories(false); }}
-                        className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors ${['vignettes','vignette-reading'].includes(selectedFilter) ? 'bg-indigo-100 text-indigo-800' : 'text-gray-700 hover:bg-indigo-50'}`}
-                      >
-                        <span>⋯ More</span>
-                        <i data-lucide={showMore ? 'chevron-up' : 'chevron-down'} className="w-4 h-4"></i>
-                      </button>
-                      {showMore && (
-                        <div className="border-t border-indigo-100">
+            {/* ── Layout Picker Panel ── */}
+            {showLayoutPicker && (
+              <div style={{position:'fixed',top:'58px',right:'12px',zIndex:1000,background:'white',borderRadius:'16px',boxShadow:'0 8px 32px rgba(0,0,0,0.15)',padding:'12px',border:'1px solid #f3f4f6',minWidth:'240px'}}>
+                <p style={{fontSize:'11px',fontWeight:'700',color:'#6b7280',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:'8px',paddingLeft:'4px'}}>Arrange Layout</p>
+                <div style={{display:'flex',flexDirection:'column',gap:'4px'}}>
+                  {layoutOrder.map((id, idx) => {
+                    const item = LAYOUT_ITEMS.find(i => i.id === id);
+                    return (
+                      <div key={id} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 8px',borderRadius:'12px',background:'#f9fafb',border:'1px solid #f3f4f6'}}>
+                        <span style={{color:'#9ca3af',fontWeight:'700',fontSize:'11px',minWidth:'16px'}}>{String.fromCharCode(65+idx)}</span>
+                        <span style={{fontSize:'14px'}}>{item.emoji}</span>
+                        <span style={{fontSize:'13px',fontWeight:'500',color:'#374151',flex:1}}>{item.label}</span>
+                        <div style={{display:'flex',flexDirection:'column'}}>
                           <button
-                            onClick={() => { setSelectedFilter('vignettes'); setShowMore(false); }}
-                            className={`w-full flex items-center px-6 py-2.5 text-sm text-left transition-colors border-b border-indigo-50 ${selectedFilter === 'vignettes' ? 'bg-indigo-600 text-white font-semibold' : 'text-gray-700 hover:bg-indigo-50'}`}
-                          >
-                            <span className="mr-2">🎬</span><span>Videos (14)</span>
-                          </button>
+                            onClick={() => moveItem(idx, -1)}
+                            disabled={idx === 0}
+                            style={{border:'none',background:'none',cursor:idx===0?'default':'pointer',color:idx===0?'#e5e7eb':'#4f46e5',fontSize:'11px',fontWeight:'900',lineHeight:'1',padding:'1px 4px'}}
+                          >▲</button>
                           <button
-                            onClick={() => { setSelectedFilter('vignette-reading'); setShowMore(false); }}
-                            className={`w-full flex items-center px-6 py-2.5 text-sm text-left transition-colors ${selectedFilter === 'vignette-reading' ? 'bg-indigo-600 text-white font-semibold' : 'text-gray-700 hover:bg-indigo-50'}`}
-                          >
-                            <span className="mr-2">📖</span><span>Vignettes (14)</span>
-                          </button>
+                            onClick={() => moveItem(idx, 1)}
+                            disabled={idx === layoutOrder.length - 1}
+                            style={{border:'none',background:'none',cursor:idx===layoutOrder.length-1?'default':'pointer',color:idx===layoutOrder.length-1?'#e5e7eb':'#4f46e5',fontSize:'11px',fontWeight:'900',lineHeight:'1',padding:'1px 4px'}}
+                          >▼</button>
                         </div>
-                      )}
-                    </div>
-
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2">
-                    {selectedFilter === 'alphabetical'
-                      ? `Showing all ${getFilteredPrayers().length} prayers A–Z`
-                      : selectedFilter === 'vignettes'
-                        ? `${vignettesData.length} inspirational videos by Francis Anfuso`
-                      : selectedFilter === 'vignette-reading'
-                        ? `${vignettesReadingData.length} scripture & devotional readings`
-                        : `Showing ${getFilteredPrayers().length} prayers in ${categories.find(c => c.id === selectedFilter)?.name}`
-                    }
-                  </p>
+                      </div>
+                    );
+                  })}
                 </div>
-              </>
-            ) : (
-              /* For a Loved One Form */
-              <div className="max-w-md mx-auto space-y-6">
-                <div className="bg-white p-6 rounded-xl border border-gray-200">
-                  <h3 className="font-bold text-lg mb-4">Prayer for a Loved One</h3>
-
-                  {/* Gender Selection */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Gender:</label>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setLovedOneGender('male')}
-                        className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm ${
-                          lovedOneGender === 'male'
-                            ? 'bg-indigo-600 border-indigo-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-700'
-                        }`}
-                      >
-                        Male
-                      </button>
-                      <button
-                        onClick={() => setLovedOneGender('female')}
-                        className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm ${
-                          lovedOneGender === 'female'
-                            ? 'bg-indigo-600 border-indigo-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-700'
-                        }`}
-                      >
-                        Female
-                      </button>
-                      <button
-                        onClick={() => setLovedOneGender('multiple')}
-                        className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm ${
-                          lovedOneGender === 'multiple'
-                            ? 'bg-indigo-600 border-indigo-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-700'
-                        }`}
-                      >
-                        Multiple
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Name Input */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Name:</label>
-                    <input
-                      type="text"
-                      value={lovedOneName}
-                      onChange={(e) => setLovedOneName(e.target.value)}
-                      placeholder="Enter their name"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-
-                  {/* Voice Selection */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Voice:</label>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setSelectedVoice('francis')}
-                        className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm ${
-                          selectedVoice === 'francis'
-                            ? 'bg-indigo-600 border-indigo-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-700'
-                        }`}
-                      >
-                        Francis
-                      </button>
-                      <button
-                        onClick={() => setSelectedVoice('jewel')}
-                        className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm ${
-                          selectedVoice === 'jewel'
-                            ? 'bg-indigo-600 border-indigo-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-700'
-                        }`}
-                      >
-                        Jewel
-                      </button>
-                      <button
-                        onClick={() => setSelectedVoice('alex')}
-                        className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm ${
-                          selectedVoice === 'alex'
-                            ? 'bg-indigo-600 border-indigo-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-700'
-                        }`}
-                      >
-                        Alex
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Prayer Preview */}
-                {lovedOneName && (
-                  <div className="bg-amber-50 border-l-4 border-amber-400 p-5 rounded-r-xl">
-                    <p className="text-gray-700 leading-relaxed">
-                      Heavenly Father, I come before You today to lift up {lovedOneName} in prayer.
-                      {lovedOneGender === 'male' && ' I ask that You would surround him with Your presence, guide his steps, and protect him from all harm. '}
-                      {lovedOneGender === 'female' && ' I ask that You would surround her with Your presence, guide her steps, and protect her from all harm. '}
-                      {lovedOneGender === 'multiple' && ' I ask that You would surround them with Your presence, guide their steps, and protect them from all harm. '}
-                      Give {lovedOneGender === 'multiple' ? 'them' : lovedOneGender === 'female' ? 'her' : 'him'} strength for today and hope for tomorrow.
-                      Draw {lovedOneGender === 'multiple' ? 'them' : lovedOneGender === 'female' ? 'her' : 'him'} closer to You and reveal Your love in powerful ways.
-                      In Jesus' mighty name, Amen.
-                    </p>
-                  </div>
-                )}
+                <button
+                  onClick={() => setLayoutOrder(['header','search','tabs','filter','action'])}
+                  style={{marginTop:'8px',width:'100%',fontSize:'11px',color:'#9ca3af',background:'none',border:'none',borderTop:'1px solid #f3f4f6',paddingTop:'8px',cursor:'pointer'}}
+                  onMouseEnter={e => e.currentTarget.style.color='#4b5563'}
+                  onMouseLeave={e => e.currentTarget.style.color='#9ca3af'}
+                >↺ Reset to default</button>
               </div>
             )}
-          </div>
 
-          {/* Action Button */}
-          <div className="p-4 bg-white border-t safe-bottom">
-            {prayerType === 'personal' ? (
-              <button
-                onClick={() => setScreen(selectedFilter === 'vignettes' ? 'vignettes' : selectedFilter === 'vignette-reading' ? 'vignette-reading' : 'prayers')}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg active:scale-98 transition-transform flex items-center justify-center"
-              >
-                <i data-lucide={selectedFilter === 'vignettes' ? 'play-circle' : selectedFilter === 'vignette-reading' ? 'book-open' : 'shield'} className="w-5 h-5 mr-2"></i>
-                {selectedFilter === 'alphabetical'
-                  ? `View All ${getFilteredPrayers().length} Prayers (A–Z)`
-                  : selectedFilter === 'vignettes'
-                    ? `Watch ${vignettesData.length} Videos`
-                    : selectedFilter === 'vignette-reading'
-                    ? `Read ${vignettesReadingData.length} Vignettes`
-                    : `View ${getFilteredPrayers().length} Prayers — ${categories.find(c => c.id === selectedFilter)?.name}`
-                }
-              </button>
-            ) : (
-              <button
-                onClick={() => lovedOneName && setScreen('loved-one-prayer')}
-                disabled={!lovedOneName}
-                className={`w-full py-4 rounded-xl font-semibold text-lg shadow-lg transition-all flex items-center justify-center ${
-                  lovedOneName
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                <i data-lucide="heart" className="w-5 h-5 mr-2"></i>
-                Create Prayer
-              </button>
-            )}
+            {/* ── Rendered blocks in layout order ── */}
+            {layoutOrder.map(id => blocks[id])}
           </div>
-        </div>
-      );
+        );
+      };
 
       // Prayers List Screen
       const renderPrayers = () => {
