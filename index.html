@@ -1230,17 +1230,49 @@
 
       // Prayer Detail Screen
       // Convert prayer plain text to HTML: superscript footnote numbers + paragraph breaks
-      const formatPrayerText = (text) => {
+      // Bible.com book abbreviations (NLT = version 116)
+      const BOOK_ABBREVS = {
+        'genesis':'GEN','exodus':'EXO','leviticus':'LEV','numbers':'NUM','deuteronomy':'DEU',
+        'joshua':'JOS','judges':'JDG','ruth':'RUT','1 samuel':'1SA','2 samuel':'2SA',
+        '1 kings':'1KI','2 kings':'2KI','1 chronicles':'1CH','2 chronicles':'2CH',
+        'ezra':'EZR','nehemiah':'NEH','esther':'EST','job':'JOB','psalm':'PSA','psalms':'PSA',
+        'proverbs':'PRO','ecclesiastes':'ECC','song of solomon':'SNG','song':'SNG',
+        'isaiah':'ISA','jeremiah':'JER','lamentations':'LAM','ezekiel':'EZK','daniel':'DAN',
+        'hosea':'HOS','joel':'JOL','amos':'AMO','obadiah':'OBA','jonah':'JON','micah':'MIC',
+        'nahum':'NAM','habakkuk':'HAB','zephaniah':'ZEP','haggai':'HAG','zechariah':'ZEC',
+        'malachi':'MAL','matthew':'MAT','mark':'MRK','luke':'LUK','john':'JHN','acts':'ACT',
+        'romans':'ROM','1 corinthians':'1CO','2 corinthians':'2CO','galatians':'GAL',
+        'ephesians':'EPH','philippians':'PHP','colossians':'COL','1 thessalonians':'1TH',
+        '2 thessalonians':'2TH','1 timothy':'1TI','2 timothy':'2TI','titus':'TIT',
+        'philemon':'PHM','hebrews':'HEB','james':'JAS','1 peter':'1PE','2 peter':'2PE',
+        '1 john':'1JN','2 john':'2JN','3 john':'3JN','jude':'JUD','revelation':'REV'
+      };
+
+      const toBibleComUrl = (ref) => {
+        if (!ref) return null;
+        const match = ref.match(/^(.+?)\s+(\d+):(\d+)/);
+        if (!match) return null;
+        const [, book, chapter, verse] = match;
+        const abbrev = BOOK_ABBREVS[book.toLowerCase().trim()];
+        if (!abbrev) return null;
+        return `https://www.bible.com/bible/116/${abbrev}.${chapter}.${verse}`;
+      };
+
+      const formatPrayerText = (text, refs) => {
         if (!text) return '';
         // Escape HTML special chars first
         let html = text
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
-        // Superscript footnote numbers: 1-2 digits immediately after sentence punctuation.
-        // Uses RegExp constructor so \n inside the pattern is a real escape, not a raw newline.
+        // Superscript footnote numbers with tooltip showing verse reference
         html = html.replace(new RegExp('([.!?,;\u2019\u201c\u201d])(\\d{1,2})(?=\\s|$)', 'gm'),
-          '$1<sup class="prayer-ref text-indigo-500 font-semibold text-xs cursor-default">$2</sup>');
+          function(match, p1, p2) {
+            const idx = parseInt(p2, 10) - 1;
+            const refText = (refs && refs[idx]) ? refs[idx] : '';
+            const titleAttr = refText ? ' title="' + refText + '"' : '';
+            return p1 + '<sup class="prayer-ref text-indigo-500 font-semibold text-xs cursor-help"' + titleAttr + '>' + p2 + '</sup>';
+          });
         // Split on double newlines into paragraphs, convert single newlines to <br>
         const paras = html.split('\n\n');
         html = paras.map(function(p) {
@@ -1272,7 +1304,7 @@
               <h2 className="text-2xl font-bold text-gray-800 mb-4">{currentPrayer?.title}</h2>
 
               <div className="bg-amber-50 border-l-4 border-amber-400 p-5 rounded-r-xl">
-                <div className="text-gray-700 leading-relaxed text-base prayer-body" dangerouslySetInnerHTML={{ __html: formatPrayerText(currentPrayer?.prayer) }} />
+                <div className="text-gray-700 leading-relaxed text-base prayer-body" dangerouslySetInnerHTML={{ __html: formatPrayerText(currentPrayer?.prayer, currentPrayer?.refs) }} />
               </div>
 
               {/* Playlist Indicator */}
@@ -1342,12 +1374,22 @@
                 <div className="mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
                   <p className="text-xs text-indigo-700 font-bold mb-3 uppercase tracking-wide">📖 Scripture References</p>
                   <ol className="space-y-1">
-                    {currentPrayer.refs.map((ref, i) => (
-                      <li key={i} className="text-sm text-gray-700 flex gap-2">
-                        <span className="text-indigo-500 font-bold min-w-[1.2rem]">{i + 1}.</span>
-                        <span className="blb-ref">{ref}</span>
-                      </li>
-                    ))}
+                    {currentPrayer.refs.map((ref, i) => {
+                      const url = toBibleComUrl(ref);
+                      return (
+                        <li key={i} className="text-sm text-gray-700 flex gap-2">
+                          <span className="text-indigo-500 font-bold min-w-[1.2rem]">{i + 1}.</span>
+                          {url ? (
+                            <a href={url} target="_blank" rel="noopener noreferrer"
+                               className="noTag text-indigo-600 hover:text-indigo-800 underline decoration-indigo-300">
+                              {ref}
+                            </a>
+                          ) : (
+                            <span className="blb-ref">{ref}</span>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ol>
                 </div>
               )}
