@@ -426,11 +426,93 @@
 
     function App() {
       const [screen, setScreen] = useState('home');
+      const [currentTheme, setCurrentTheme] = useState('indigo');
+      const [showThemePicker, setShowThemePicker] = useState(false);
       const [selectedCategories, setSelectedCategories] = useState([]);
       const [selectedFilter, setSelectedFilter] = useState('alphabetical');
       const [showCategories, setShowCategories] = useState(false);
       const [showMore, setShowMore] = useState(false);
       const [searchQuery, setSearchQuery] = useState('');
+
+      // ── THEME DEFINITIONS ──────────────────────────────────────────
+      const THEMES = [
+        { id: 'indigo',  name: 'Indigo',  emoji: '💜', css: '' },
+        { id: 'ocean',   name: 'Ocean',   emoji: '🌊', css: `
+          .bg-indigo-50{background-color:#eff6ff!important}.bg-indigo-100{background-color:#dbeafe!important}
+          .bg-indigo-200{background-color:#bfdbfe!important}.bg-indigo-500{background-color:#3b82f6!important}
+          .bg-indigo-600{background-color:#2563eb!important}.bg-indigo-700{background-color:#1d4ed8!important}
+          .bg-indigo-800{background-color:#1e40af!important}.bg-indigo-900{background-color:#1e3a8a!important}
+          .bg-purple-600{background-color:#2563eb!important}.bg-purple-900{background-color:#1e3a8a!important}
+          .text-indigo-500{color:#3b82f6!important}.text-indigo-600{color:#2563eb!important}
+          .text-indigo-700{color:#1d4ed8!important}.text-indigo-800{color:#1e40af!important}
+          .border-indigo-100{border-color:#dbeafe!important}.border-indigo-200{border-color:#bfdbfe!important}
+          .border-indigo-300{border-color:#93c5fd!important}.border-indigo-500{border-color:#3b82f6!important}
+          .from-indigo-600{--tw-gradient-from:#2563eb!important}.to-purple-600{--tw-gradient-to:#1d4ed8!important}
+          .from-indigo-900{--tw-gradient-from:#1e3a8a!important}.to-purple-900{--tw-gradient-to:#1e3a8a!important}
+          .focus\\:ring-indigo-500:focus{--tw-ring-color:#3b82f6!important}
+          .ref-tip{background:#2563eb!important}.ref-tip::after{border-top-color:#2563eb!important}
+        ` },
+        { id: 'forest',  name: 'Forest',  emoji: '🌿', css: `
+          .bg-indigo-50{background-color:#f0fdf4!important}.bg-indigo-100{background-color:#dcfce7!important}
+          .bg-indigo-200{background-color:#bbf7d0!important}.bg-indigo-500{background-color:#22c55e!important}
+          .bg-indigo-600{background-color:#16a34a!important}.bg-indigo-700{background-color:#15803d!important}
+          .bg-indigo-800{background-color:#166534!important}.bg-indigo-900{background-color:#14532d!important}
+          .bg-purple-600{background-color:#16a34a!important}.bg-purple-900{background-color:#14532d!important}
+          .text-indigo-500{color:#22c55e!important}.text-indigo-600{color:#16a34a!important}
+          .text-indigo-700{color:#15803d!important}.text-indigo-800{color:#166534!important}
+          .border-indigo-100{border-color:#dcfce7!important}.border-indigo-200{border-color:#bbf7d0!important}
+          .border-indigo-300{border-color:#86efac!important}.border-indigo-500{border-color:#22c55e!important}
+          .from-indigo-600{--tw-gradient-from:#16a34a!important}.to-purple-600{--tw-gradient-to:#15803d!important}
+          .from-indigo-900{--tw-gradient-from:#14532d!important}.to-purple-900{--tw-gradient-to:#14532d!important}
+          .focus\\:ring-indigo-500:focus{--tw-ring-color:#22c55e!important}
+          .ref-tip{background:#16a34a!important}.ref-tip::after{border-top-color:#16a34a!important}
+        ` },
+        { id: 'crimson', name: 'Crimson', emoji: '❤️', css: `
+          .bg-indigo-50{background-color:#fff1f2!important}.bg-indigo-100{background-color:#ffe4e6!important}
+          .bg-indigo-200{background-color:#fecdd3!important}.bg-indigo-500{background-color:#f43f5e!important}
+          .bg-indigo-600{background-color:#e11d48!important}.bg-indigo-700{background-color:#be123c!important}
+          .bg-indigo-800{background-color:#9f1239!important}.bg-indigo-900{background-color:#881337!important}
+          .bg-purple-600{background-color:#e11d48!important}.bg-purple-900{background-color:#881337!important}
+          .text-indigo-500{color:#f43f5e!important}.text-indigo-600{color:#e11d48!important}
+          .text-indigo-700{color:#be123c!important}.text-indigo-800{color:#9f1239!important}
+          .border-indigo-100{border-color:#ffe4e6!important}.border-indigo-200{border-color:#fecdd3!important}
+          .border-indigo-300{border-color:#fda4af!important}.border-indigo-500{border-color:#f43f5e!important}
+          .from-indigo-600{--tw-gradient-from:#e11d48!important}.to-purple-600{--tw-gradient-to:#be123c!important}
+          .from-indigo-900{--tw-gradient-from:#881337!important}.to-purple-900{--tw-gradient-to:#881337!important}
+          .focus\\:ring-indigo-500:focus{--tw-ring-color:#f43f5e!important}
+          .ref-tip{background:#e11d48!important}.ref-tip::after{border-top-color:#e11d48!important}
+        ` },
+        { id: 'midnight', name: 'Midnight', emoji: '🌙', css: `
+          .bg-indigo-50{background-color:#1e1b4b!important;color:#e0e7ff!important}
+          .bg-indigo-100{background-color:#312e81!important}.bg-indigo-200{background-color:#3730a3!important}
+          .bg-indigo-500{background-color:#818cf8!important}.bg-indigo-600{background-color:#6366f1!important}
+          .bg-indigo-700{background-color:#4f46e5!important}.bg-indigo-800{background-color:#4338ca!important}
+          .bg-indigo-900{background-color:#1e1b4b!important}
+          .bg-purple-600{background-color:#7c3aed!important}.bg-purple-900{background-color:#1e1b4b!important}
+          .text-indigo-500{color:#818cf8!important}.text-indigo-600{color:#6366f1!important}
+          .text-indigo-700{color:#a5b4fc!important}.text-indigo-800{color:#c7d2fe!important}
+          .border-indigo-100{border-color:#312e81!important}.border-indigo-200{border-color:#3730a3!important}
+          .border-indigo-300{border-color:#4338ca!important}.border-indigo-500{border-color:#6366f1!important}
+          .from-indigo-600{--tw-gradient-from:#4338ca!important}.to-purple-600{--tw-gradient-to:#6d28d9!important}
+          .from-indigo-900{--tw-gradient-from:#0f0c29!important}.to-purple-900{--tw-gradient-to:#302b63!important}
+          .focus\\:ring-indigo-500:focus{--tw-ring-color:#6366f1!important}
+          .ref-tip{background:#6366f1!important}.ref-tip::after{border-top-color:#6366f1!important}
+          body,.bg-gray-50{background-color:#111827!important}
+          .bg-white{background-color:#1f2937!important}.text-gray-800{color:#f9fafb!important}
+          .text-gray-700{color:#e5e7eb!important}.text-gray-600{color:#d1d5db!important}
+          .text-gray-500{color:#9ca3af!important}.text-gray-400{color:#6b7280!important}
+          .border-gray-200{border-color:#374151!important}.border-b{border-color:#374151!important}
+          input{background-color:#1f2937!important;color:#f9fafb!important;border-color:#374151!important}
+        ` },
+      ];
+
+      useEffect(() => {
+        let el = document.getElementById('theme-override');
+        if (!el) { el = document.createElement('style'); el.id = 'theme-override'; document.head.appendChild(el); }
+        const t = THEMES.find(t => t.id === currentTheme);
+        el.textContent = t ? t.css : '';
+      }, [currentTheme]);
+      // ── END THEMES ───────────────────────────────────────────────
       const [currentPrayer, setCurrentPrayer] = useState(null);
       const [currentVignette, setCurrentVignette] = useState(null);
       const [isPlaying, setIsPlaying] = useState(false);
@@ -764,9 +846,30 @@
       const renderHome = () => (
         <div className="flex flex-col h-full bg-gray-50">
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-5 pt-12 safe-top">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-5 pt-12 safe-top relative">
             <h1 className="text-2xl font-bold text-center">Prayers for Every Day Battles</h1>
             <p className="text-sm text-center opacity-90 mt-1">Find strength for your struggles</p>
+            {/* Theme Picker */}
+            <button onClick={() => setShowThemePicker(!showThemePicker)}
+              className="absolute top-3 right-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-all"
+              title="Change theme">
+              <span style={{fontSize:'18px'}}>🎨</span>
+            </button>
+            {showThemePicker && (
+              <div className="absolute top-12 right-3 bg-white rounded-2xl shadow-xl p-3 z-50 border border-gray-100">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 px-1">Choose Theme</p>
+                <div className="flex flex-col gap-1">
+                  {THEMES.map(t => (
+                    <button key={t.id} onClick={() => { setCurrentTheme(t.id); setShowThemePicker(false); }}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all ${currentTheme === t.id ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}>
+                      <span>{t.emoji}</span>
+                      <span>{t.name}</span>
+                      {currentTheme === t.id && <span className="ml-auto">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Search */}
