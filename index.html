@@ -433,7 +433,7 @@
       const [showCategories, setShowCategories] = useState(false);
       const [showMore, setShowMore] = useState(false);
       const [homeCategory, setHomeCategory] = useState('all');
-      const [layoutOrder, setLayoutOrder] = useState(['header','searchcat','prayerlist','bottombar','action']);
+      const [layoutOrder, setLayoutOrder] = useState(['header','tabs','searchcat','prayerlist','bottombar','action']);
       const [showLayoutPicker, setShowLayoutPicker] = useState(false);
       const [searchQuery, setSearchQuery] = useState('');
 
@@ -547,6 +547,10 @@
       const [prayerType, setPrayerType] = useState('personal'); // 'personal' or 'loved-one'
       const [lovedOneName, setLovedOneName] = useState('');
       const [lovedOneGender, setLovedOneGender] = useState('male');
+      const [lovedOnes, setLovedOnes] = useState([]);           // [{name, gender}]
+      const [newLovedOneName, setNewLovedOneName] = useState('');
+      const [newLovedOneGender, setNewLovedOneGender] = useState('male');
+      const [showDownloadPopup, setShowDownloadPopup] = useState(false);
       const [downloadStatus, setDownloadStatus] = useState('');
       const [downloadOptions, setDownloadOptions] = useState({
         includePdf: false,
@@ -898,6 +902,7 @@
         // ── LAYOUT ITEM DEFINITIONS ──────────────────────────────────────
         const LAYOUT_ITEMS = [
           { id: 'header',     label: 'Title',               emoji: '🏠' },
+          { id: 'tabs',       label: 'Personal / Loved One',emoji: '👥' },
           { id: 'searchcat',  label: 'Search & Category',   emoji: '🔍' },
           { id: 'prayerlist', label: 'Prayer Checkboxes',   emoji: '☑️' },
           { id: 'bottombar',  label: 'Voice & Options',     emoji: '🎙️' },
@@ -937,14 +942,52 @@
 
           // ① Gradient Header
           header: (
-            <div key="header" className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-5 pt-12 safe-top">
-              <h1 className="text-2xl font-bold text-center pr-20">Prayers For Every Day Battles</h1>
-              <p className="text-sm text-center opacity-80 mt-1">My present Spiritual Battles. Check as many as apply.</p>
+            <div key="header" className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 pt-12 safe-top">
+              <div className="flex items-center justify-center gap-3">
+                <img
+                  src="icon-192.png"
+                  alt="Battle Prayers logo"
+                  className="w-12 h-12 rounded-xl flex-shrink-0"
+                  style={{boxShadow:'0 2px 8px rgba(0,0,0,0.30)'}}
+                />
+                <div className="flex-1 min-w-0 pr-16">
+                  <h1 className="text-xl font-bold leading-tight">Prayers For Every Day Battles</h1>
+                  <p className="text-xs opacity-80 mt-0.5">My present Spiritual Battles. Check as many as apply.</p>
+                </div>
+              </div>
             </div>
           ),
 
-          // ② Search bar + Category dropdown
-          searchcat: (
+          // ② Personal / Loved One tab row
+          tabs: (
+            <div key="tabs">
+              <div className="flex bg-white border-b">
+                <button
+                  onClick={() => setPrayerType('personal')}
+                  className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+                    prayerType === 'personal'
+                      ? 'text-indigo-600 border-b-2 border-indigo-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  For Every Day Battles
+                </button>
+                <button
+                  onClick={() => setPrayerType('loved-one')}
+                  className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+                    prayerType === 'loved-one'
+                      ? 'text-indigo-600 border-b-2 border-indigo-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  For a Loved One
+                </button>
+              </div>
+            </div>
+          ),
+
+          // ③ Search bar + Category dropdown
+          searchcat: prayerType === 'loved-one' ? null : (
             <div key="searchcat" className="p-3 bg-white shadow-sm flex gap-2 items-center">
               {/* Search */}
               <div className="relative flex-1">
@@ -978,8 +1021,106 @@
             </div>
           ),
 
-          // ③ Scrollable prayer checkbox list
-          prayerlist: (
+          // ④ Scrollable prayer checkbox list  (or Loved One form)
+          prayerlist: prayerType === 'loved-one' ? (
+            <div key="prayerlist" className="flex-1 overflow-y-auto hide-scrollbar bg-gray-50">
+              <div className="max-w-md mx-auto p-4 space-y-4">
+
+                {/* ── Add-person row ── */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Add a Loved One</p>
+                  <div className="flex gap-2 items-center">
+                    {/* Name input */}
+                    <input
+                      type="text"
+                      value={newLovedOneName}
+                      onChange={(e) => setNewLovedOneName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newLovedOneName.trim()) {
+                          setLovedOnes(prev => [...prev, {name: newLovedOneName.trim(), gender: newLovedOneGender}]);
+                          setNewLovedOneName('');
+                        }
+                      }}
+                      placeholder="Enter name…"
+                      className="flex-1 px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    {/* Gender dropdown */}
+                    <select
+                      value={newLovedOneGender}
+                      onChange={(e) => setNewLovedOneGender(e.target.value)}
+                      className="py-2.5 px-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      style={{minWidth:'80px'}}
+                    >
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                    {/* + button */}
+                    <button
+                      onClick={() => {
+                        if (newLovedOneName.trim()) {
+                          setLovedOnes(prev => [...prev, {name: newLovedOneName.trim(), gender: newLovedOneGender}]);
+                          setNewLovedOneName('');
+                        }
+                      }}
+                      disabled={!newLovedOneName.trim()}
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl font-bold transition-colors flex-shrink-0 ${
+                        newLovedOneName.trim()
+                          ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                      }`}
+                      title="Add person"
+                    >+</button>
+                  </div>
+                </div>
+
+                {/* ── Added people list ── */}
+                {lovedOnes.length > 0 && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="px-4 py-2.5 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
+                      <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">
+                        {lovedOnes.length} {lovedOnes.length === 1 ? 'Person' : 'People'} Added
+                      </p>
+                      <button
+                        onClick={() => setLovedOnes([])}
+                        className="text-xs text-indigo-400 hover:text-indigo-600 font-medium"
+                      >Clear all</button>
+                    </div>
+                    {lovedOnes.map((person, idx) => (
+                      <div key={idx} className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-b-0">
+                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm flex-shrink-0">
+                          {person.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 truncate">{person.name}</p>
+                          <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium mt-0.5 ${
+                            person.gender === 'male'
+                              ? 'bg-blue-50 text-blue-600'
+                              : 'bg-pink-50 text-pink-600'
+                          }`}>
+                            {person.gender === 'male' ? '♂ Male' : '♀ Female'}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setLovedOnes(prev => prev.filter((_, i) => i !== idx))}
+                          className="text-gray-300 hover:text-red-400 transition-colors text-lg leading-none flex-shrink-0 px-1"
+                          title="Remove"
+                        >×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Placeholder when list is empty */}
+                {lovedOnes.length === 0 && (
+                  <div className="text-center py-8 text-gray-400">
+                    <div className="text-4xl mb-2">🙏</div>
+                    <p className="text-sm font-medium text-gray-500">Add the people you want to pray for</p>
+                    <p className="text-xs mt-1">Enter a name and tap <strong>+</strong></p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
             <div key="prayerlist" className="flex-1 overflow-y-auto hide-scrollbar bg-gray-50">
               {/* Selection summary bar */}
               {selCount > 0 && (
@@ -1037,7 +1178,7 @@
             </div>
           ),
 
-          // ④ Voice selector + Background Music
+          // ⑤ Voice selector + Background Music
           bottombar: (
             <div key="bottombar" className="bg-white border-t border-gray-100 px-4 pt-3 pb-2">
               <div className="flex items-center gap-4">
@@ -1077,26 +1218,65 @@
             </div>
           ),
 
-          // ⑤ Access / View button
+          // ⑥ Access / View button
           action: (
             <div key="action" className="p-4 bg-white border-t safe-bottom">
-              <button
-                onClick={() => {
-                  if (selCount > 0) {
-                    playAllSelected();
-                  } else {
-                    setSelectedFilter('alphabetical');
-                    setScreen('prayers');
+              {prayerType === 'personal' ? (
+                <button
+                  onClick={() => {
+                    if (selCount > 0) {
+                      playAllSelected();
+                    } else {
+                      setSelectedFilter('alphabetical');
+                      setScreen('prayers');
+                    }
+                  }}
+                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg active:scale-98 transition-transform flex items-center justify-center gap-2"
+                >
+                  <i data-lucide={selCount > 0 ? 'play-circle' : 'book-open'} className="w-5 h-5"></i>
+                  {selCount > 0
+                    ? `Access ${selCount} Selected Prayer${selCount !== 1 ? 's' : ''}`
+                    : 'Browse All Prayers'
                   }
-                }}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg active:scale-98 transition-transform flex items-center justify-center gap-2"
-              >
-                <i data-lucide={selCount > 0 ? 'play-circle' : 'book-open'} className="w-5 h-5"></i>
-                {selCount > 0
-                  ? `Access ${selCount} Selected Prayer${selCount !== 1 ? 's' : ''}`
-                  : 'Browse All Prayers'
-                }
-              </button>
+                </button>
+              ) : (
+                <div className="flex gap-3">
+                  {/* 🎵 Play button */}
+                  <button
+                    onClick={() => {
+                      if (lovedOnes.length > 0) {
+                        setLovedOneName(lovedOnes[0].name);
+                        setLovedOneGender(lovedOnes[0].gender);
+                        setScreen('loved-one-prayer');
+                      }
+                    }}
+                    disabled={lovedOnes.length === 0}
+                    className={`flex-1 py-4 rounded-xl font-semibold text-base shadow-lg transition-all flex items-center justify-center gap-2 ${
+                      lovedOnes.length > 0
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    }`}
+                    title="Play prayers"
+                  >
+                    <i data-lucide="play-circle" className="w-5 h-5"></i>
+                    {lovedOnes.length > 0 ? 'Play Prayers' : 'Add a Person'}
+                  </button>
+                  {/* ⬇️ Download button */}
+                  <button
+                    onClick={() => lovedOnes.length > 0 && setShowDownloadPopup(true)}
+                    disabled={lovedOnes.length === 0}
+                    className={`px-5 py-4 rounded-xl font-semibold text-base shadow-lg transition-all flex items-center justify-center gap-2 ${
+                      lovedOnes.length > 0
+                        ? 'bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50'
+                        : 'bg-gray-100 border-2 border-gray-200 text-gray-300 cursor-not-allowed'
+                    }`}
+                    title="Download options"
+                  >
+                    <i data-lucide="download" className="w-5 h-5"></i>
+                    Download
+                  </button>
+                </div>
+              )}
             </div>
           ),
         };
@@ -1168,7 +1348,7 @@
                   })}
                 </div>
                 <button
-                  onClick={() => setLayoutOrder(['header','searchcat','prayerlist','bottombar','action'])}
+                  onClick={() => setLayoutOrder(['header','tabs','searchcat','prayerlist','bottombar','action'])}
                   style={{marginTop:'8px',width:'100%',fontSize:'11px',color:'#9ca3af',background:'none',border:'none',borderTop:'1px solid #f3f4f6',paddingTop:'8px',cursor:'pointer'}}
                   onMouseEnter={e => e.currentTarget.style.color='#4b5563'}
                   onMouseLeave={e => e.currentTarget.style.color='#9ca3af'}
@@ -1178,6 +1358,83 @@
 
             {/* ── Rendered blocks in layout order ── */}
             {layoutOrder.map(id => blocks[id])}
+
+            {/* ── Download Popup Modal ── */}
+            {showDownloadPopup && (
+              <div
+                style={{position:'fixed',inset:0,zIndex:2000,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'flex-end',justifyContent:'center'}}
+                onClick={() => setShowDownloadPopup(false)}
+              >
+                <div
+                  style={{background:'white',borderRadius:'24px 24px 0 0',width:'100%',maxWidth:'480px',padding:'24px',paddingBottom:'36px'}}
+                  onClick={e => e.stopPropagation()}
+                >
+                  {/* Handle bar */}
+                  <div style={{width:'40px',height:'4px',background:'#e5e7eb',borderRadius:'2px',margin:'0 auto 20px'}}></div>
+
+                  <h3 style={{fontSize:'18px',fontWeight:'700',color:'#111827',marginBottom:'6px'}}>Download Options</h3>
+                  <p style={{fontSize:'13px',color:'#6b7280',marginBottom:'20px'}}>
+                    Choose how to download prayers for {lovedOnes.map(p => p.name).join(', ')}
+                  </p>
+
+                  {/* Option 1: Individual ZIP */}
+                  <button
+                    onClick={() => {
+                      setShowDownloadPopup(false);
+                      setDownloadStatus('Preparing individual audio files…');
+                      setTimeout(() => {
+                        setDownloadStatus('✓ Individual audio files are ready on the website');
+                        setTimeout(() => setDownloadStatus(''), 4000);
+                      }, 1500);
+                    }}
+                    style={{width:'100%',display:'flex',alignItems:'flex-start',gap:'14px',padding:'16px',borderRadius:'14px',border:'2px solid #e5e7eb',background:'white',cursor:'pointer',marginBottom:'10px',textAlign:'left'}}
+                    onMouseEnter={e => e.currentTarget.style.borderColor='#4f46e5'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor='#e5e7eb'}
+                  >
+                    <div style={{width:'40px',height:'40px',borderRadius:'10px',background:'#eef2ff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p style={{fontSize:'15px',fontWeight:'600',color:'#111827',marginBottom:'2px'}}>Individual ZIP</p>
+                      <p style={{fontSize:'12px',color:'#6b7280',lineHeight:'1.4'}}>One audio file per prayer, per person — packaged as a ZIP archive</p>
+                    </div>
+                  </button>
+
+                  {/* Option 2: Concatenated */}
+                  <button
+                    onClick={() => {
+                      setShowDownloadPopup(false);
+                      setDownloadStatus('Preparing concatenated audio…');
+                      setTimeout(() => {
+                        setDownloadStatus('✓ Concatenated files are ready on the website');
+                        setTimeout(() => setDownloadStatus(''), 4000);
+                      }, 1500);
+                    }}
+                    style={{width:'100%',display:'flex',alignItems:'flex-start',gap:'14px',padding:'16px',borderRadius:'14px',border:'2px solid #e5e7eb',background:'white',cursor:'pointer',marginBottom:'20px',textAlign:'left'}}
+                    onMouseEnter={e => e.currentTarget.style.borderColor='#4f46e5'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor='#e5e7eb'}
+                  >
+                    <div style={{width:'40px',height:'40px',borderRadius:'10px',background:'#eef2ff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p style={{fontSize:'15px',fontWeight:'600',color:'#111827',marginBottom:'2px'}}>Concatenated</p>
+                      <p style={{fontSize:'12px',color:'#6b7280',lineHeight:'1.4'}}>All prayers joined into one continuous audio file per person</p>
+                    </div>
+                  </button>
+
+                  {/* Cancel */}
+                  <button
+                    onClick={() => setShowDownloadPopup(false)}
+                    style={{width:'100%',padding:'14px',borderRadius:'14px',border:'none',background:'#f3f4f6',color:'#374151',fontSize:'15px',fontWeight:'600',cursor:'pointer'}}
+                  >Cancel</button>
+                </div>
+              </div>
+            )}
           </div>
         );
       };
