@@ -1,12 +1,12 @@
-// Prayer Battles - Service Worker v66
-const CACHE_NAME = 'prayer-battles-v71';
+// Prayer Battles - Service Worker v72
+const CACHE_NAME = 'prayer-battles-v72';
 
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
 ];
 
 // Install: pre-cache the app shell
@@ -85,16 +85,17 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 4. App shell - cache first, network fallback
+  // 4. App shell - network first, cache fallback (ensures fresh content)
   event.respondWith(
-    caches.match(request).then(cached => {
-      if (cached) return cached;
-      return fetch(request).then(response => {
-        if (response.ok) {
-          caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
-        }
-        return response;
-      }).catch(() => request.mode === 'navigate' ? caches.match('/index.html') : null);
-    })
+    fetch(request).then(response => {
+      if (response.ok) {
+        caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
+      }
+      return response;
+    }).catch(() =>
+      caches.match(request).then(cached =>
+        cached || (request.mode === 'navigate' ? caches.match('./index.html') : null)
+      )
+    )
   );
 });
