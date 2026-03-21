@@ -2051,9 +2051,12 @@
 
         // ── GET HOME PRAYER LIST ──────────────────────────────────────────
         const getHomePrayers = () => {
-          let prayers = getAllPrayers();
+          let prayers;
           if (homeCategory !== 'all') {
-            prayers = prayers.filter(p => p.category === homeCategory);
+            // Go directly to this playlist — no global deduplication
+            prayers = (prayersDatabase[homeCategory] || []).map(p => ({ ...p, category: homeCategory }));
+          } else {
+            prayers = getAllPrayers();
           }
           if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase();
