@@ -2353,18 +2353,19 @@
                   <p className="text-xs opacity-80 mt-0.5">My present Spiritual Battles. Check as many as apply.</p>
                 </div>
               </div>
+              {/* Guided Playlists quick-access button */}
+              <div className="px-4 pb-2">
+                <button
+                  onClick={() => setScreen('guided-playlists')}
+                  className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-semibold text-sm"
+                  style={{background:'rgba(255,255,255,0.18)', color:'white', border:'1px solid rgba(255,255,255,0.3)'}}
+                >
+                  <span>Browse Guided Playlists</span>
+                  <i data-lucide="chevron-right" className="w-4 h-4 opacity-80"></i>
+                </button>
+              </div>
             </div>
-            {/* Guided Playlists quick-access button */}
-            <div className="px-4 pb-3">
-              <button
-                onClick={() => setScreen('guided-playlists')}
-                className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-semibold text-sm"
-                style={{background:'rgba(255,255,255,0.18)', color:'white', border:'1px solid rgba(255,255,255,0.3)'}}
-              >
-                <span>📋 Browse Guided Playlists</span>
-                <i data-lucide="chevron-right" className="w-4 h-4 opacity-80"></i>
-              </button>
-            </div>
+
           ),
 
           // ② Personal / Loved One tab row
