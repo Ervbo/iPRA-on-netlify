@@ -1528,6 +1528,7 @@
       const [showCategories, setShowCategories] = useState(false);
       const [showMore, setShowMore] = useState(false);
       const [homeCategory, setHomeCategory] = useState('all');
+      const [detailPrayerIdx, setDetailPrayerIdx] = useState(0); // selected prayer in playlist detail
       const [layoutOrder, setLayoutOrder] = useState(['header','tabs','searchcat','prayerlist','bottombar','action']);
       const [showLayoutPicker, setShowLayoutPicker] = useState(false);
       const [searchQuery, setSearchQuery] = useState('');
@@ -1671,7 +1672,12 @@
       const [prayerType, setPrayerType] = useState('personal'); // 'personal' or 'loved-one'
       const [lovedOneName, setLovedOneName] = useState('');
       const [lovedOneGender, setLovedOneGender] = useState('male');
-      const [lovedOnes, setLovedOnes] = useState([]);           // [{name, gender}]
+      const [lovedOnes, setLovedOnes] = useState(() => {
+        try {
+          const saved = localStorage.getItem('lovedOnes');
+          return saved ? JSON.parse(saved) : [];
+        } catch(e) { return []; }
+      });           // [{name, gender}]
       const [newLovedOneName, setNewLovedOneName] = useState('');
       const [newLovedOneGender, setNewLovedOneGender] = useState('male');
       const [showDownloadPopup, setShowDownloadPopup] = useState(false);
@@ -2030,6 +2036,267 @@
       };
 
       // Home Screen
+      const renderPlaylistDetail = () => {
+        const playlist = categories.find(c => c.id === homeCategory) || {name: homeCategory, id: homeCategory};
+        const prayers  = prayersDatabase[homeCategory] || [];
+        const idx      = Math.min(detailPrayerIdx, prayers.length - 1);
+        const active   = prayers[idx] || null;
+
+        // Play the active prayer via speech synthesis
+        const playPrayer = () => {
+          if (!active || !('speechSynthesis' in window)) return;
+          window.speechSynthesis.cancel();
+          const utter = new SpeechSynthesisUtterance(active.prayer || active.title);
+          utter.rate = 0.85;
+          utter.pitch = 1.0;
+          const allVoices = window.speechSynthesis.getVoices();
+          const enVoices  = allVoices.filter(v => v.lang.startsWith('en'));
+          const voicePrefs = {
+            francis: ['Daniel','Fred','Tom','Gordon','Aaron','Microsoft David','Google UK English Male'],
+            jewel:   ['Samantha','Karen','Victoria','Moira','Tessa','Microsoft Zira','Google US English'],
+            michael: ['Daniel','Tom','Fred','Microsoft David','Google UK English Male','Aaron'],
+          };
+          const prefs = voicePrefs[selectedVoice] || [];
+          let chosen = null;
+          for (const n of prefs) { chosen = enVoices.find(v => v.name.includes(n)); if (chosen) break; }
+          if (!chosen && enVoices.length > 0) chosen = enVoices[0];
+          if (chosen) utter.voice = chosen;
+          window.speechSynthesis.speak(utter);
+        };
+
+        return (
+          <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
+
+            {/* ── iPRA Header ── */}
+            <div style={{background:'linear-gradient(135deg,#1e5050 0%,#2d7070 100%)'}} className="pt-10 pb-4 px-5 safe-top flex-shrink-0">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-baseline gap-1 mb-0.5">
+                    <span style={{fontFamily:'serif',fontWeight:900,fontStyle:'italic',fontSize:'2rem',color:'white',lineHeight:1}}>i</span>
+                    <span style={{fontWeight:900,fontSize:'1.6rem',color:'white',letterSpacing:'0.05em',lineHeight:1}}>PRA</span>
+                    <div className="ml-2 flex flex-col justify-center">
+                      <span style={{fontSize:'0.6rem',fontWeight:700,color:'#a8d8d8',letterSpacing:'0.12em',lineHeight:1.2}}>PERSONAL</span>
+                      <span style={{fontSize:'0.6rem',fontWeight:700,color:'#a8d8d8',letterSpacing:'0.12em',lineHeight:1.2}}>REVIVAL APP</span>
+                    </div>
+                  </div>
+                  <p style={{fontSize:'0.85rem',fontWeight:700,color:'white',letterSpacing:'0.12em',marginTop:'4px'}}>GUIDED PLAYLISTS</p>
+                  <p style={{fontSize:'0.95rem',fontWeight:600,color:'#c8e8e8',marginTop:'2px'}}>{playlist.name}</p>
+                </div>
+                {/* Icon top-right */}
+                <button
+                  onClick={() => setScreen('guided-playlists')}
+                  style={{background:'linear-gradient(135deg,#3a8a8a,#2a6a6a)',borderRadius:'14px',padding:'10px',minWidth:'64px',textAlign:'center',boxShadow:'0 2px 8px rgba(0,0,0,0.25)'}}
+                >
+                  <i data-lucide="play-circle" style={{width:'28px',height:'28px',color:'white',display:'block',margin:'0 auto'}}></i>
+                  <span style={{fontSize:'0.55rem',color:'#c8e8e8',fontWeight:600,letterSpacing:'0.05em',display:'block',marginTop:'4px',lineHeight:1.2}}>Guided{'
+'}Playlists</span>
+                </button>
+              </div>
+            </div>
+
+            {/* ── Scrollable body ── */}
+            <div className="flex-1 overflow-y-auto hide-scrollbar" style={{paddingBottom:'48px'}}>
+
+              {/* Prayer title rows */}
+              <div className="px-4 pt-3 space-y-1.5">
+                {prayers.length === 0 && (
+                  <p className="text-center text-gray-400 py-8">No prayers in this playlist yet.</p>
+                )}
+                {prayers.map((p, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setDetailPrayerIdx(i)}
+                    className="w-full text-left px-4 py-3 rounded-lg font-medium transition-all"
+                    style={{
+                      background: i === idx ? 'rgba(45,112,112,0.25)' : 'rgba(178,216,208,0.75)',
+                      borderLeft: i === idx ? '4px solid #1e5050' : '4px solid #2d7070',
+                      color: '#1a3a3a',
+                      fontSize: '0.92rem',
+                      fontWeight: i === idx ? 700 : 500,
+                      boxShadow:'0 1px 3px rgba(0,0,0,0.08)',
+                    }}
+                  >
+                    {p.title}
+                  </button>
+                ))}
+              </div>
+
+              {/* Prayer text + controls */}
+              {active && (
+                <div className="px-4 pt-4 flex gap-3 items-start">
+                  {/* Prayer text */}
+                  <div className="flex-1 rounded-lg p-4" style={{background:'rgba(255,255,255,0.6)',border:'1px solid rgba(178,216,208,0.6)'}}>
+                    {active.refs && active.refs.length > 0 && (
+                      <p className="text-xs font-semibold mb-2" style={{color:'#2d7070'}}>
+                        {active.refs.join(' · ')}
+                      </p>
+                    )}
+                    <p className="text-sm leading-relaxed" style={{color:'#1a2a2a'}}>{active.prayer}</p>
+                  </div>
+
+                  {/* Voice + Controls */}
+                  <div className="flex-shrink-0 flex flex-col gap-2" style={{minWidth:'80px'}}>
+                    <p className="text-xs font-bold uppercase tracking-wide" style={{color:'#4a7070'}}>Voice</p>
+                    {['francis','jewel','michael'].map(v => (
+                      <label key={v} className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="detail-voice"
+                          value={v}
+                          checked={selectedVoice === v}
+                          onChange={() => {
+                            setSelectedVoice(v);
+                            try { localStorage.setItem('selectedVoice', v); } catch(e) {}
+                          }}
+                          className="accent-indigo-600"
+                        />
+                        <span className="text-xs font-medium capitalize" style={{color:'#1a3a3a'}}>
+                          {v.charAt(0).toUpperCase() + v.slice(1)}
+                        </span>
+                      </label>
+                    ))}
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={playPrayer}
+                        className="flex items-center justify-center rounded-xl transition-all active:scale-95"
+                        style={{background:'linear-gradient(135deg,#2d7070,#1e5050)',width:'40px',height:'40px',boxShadow:'0 2px 6px rgba(0,0,0,0.2)'}}
+                        title="Play"
+                      >
+                        <i data-lucide="play" style={{width:'18px',height:'18px',color:'white'}}></i>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (navigator.clipboard && active.prayer) {
+                            navigator.clipboard.writeText(`${active.title}
+
+${active.prayer}`);
+                          }
+                        }}
+                        className="flex items-center justify-center rounded-xl transition-all active:scale-95"
+                        style={{background:'rgba(178,216,208,0.8)',width:'40px',height:'40px',boxShadow:'0 2px 6px rgba(0,0,0,0.1)'}}
+                        title="Copy"
+                      >
+                        <i data-lucide="copy" style={{width:'18px',height:'18px',color:'#2d7070'}}></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Finger scroll hint */}
+              <p className="text-center text-sm font-bold mt-4 mb-2" style={{color:'#e05555'}}>Finger Scroll Up/Dn</p>
+
+            </div>
+
+            {/* ── Back strip ── */}
+            <div className="flex-shrink-0 px-4 py-2.5 safe-bottom flex items-center justify-between" style={{background:'rgba(240,235,224,0.97)',borderTop:'1px solid rgba(178,216,208,0.5)',position:'absolute',bottom:0,left:0,right:0}}>
+              <button
+                onClick={() => setScreen('guided-playlists')}
+                className="flex items-center gap-1 text-sm font-semibold"
+                style={{color:'#2d7070'}}
+              >
+                <i data-lucide="chevron-left" className="w-5 h-5"></i>
+                Guided Playlists
+              </button>
+              <span className="text-xs font-medium" style={{color:'#6a9a9a'}}>
+                {prayers.length} prayer{prayers.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+
+          </div>
+        );
+      };
+
+      const renderGuidedPlaylists = () => {
+        return (
+          <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
+
+            {/* ── iPRA Header ── */}
+            <div style={{background:'linear-gradient(135deg,#1e5050 0%,#2d7070 100%)'}} className="pt-10 pb-4 px-5 safe-top flex-shrink-0">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-baseline gap-1 mb-0.5">
+                    <span style={{fontFamily:'serif', fontWeight:900, fontStyle:'italic', fontSize:'2rem', color:'white', lineHeight:1}}>i</span>
+                    <span style={{fontWeight:900, fontSize:'1.6rem', color:'white', letterSpacing:'0.05em', lineHeight:1}}>PRA</span>
+                    <div className="ml-2 flex flex-col justify-center">
+                      <span style={{fontSize:'0.6rem', fontWeight:700, color:'#a8d8d8', letterSpacing:'0.12em', lineHeight:1.2}}>PERSONAL</span>
+                      <span style={{fontSize:'0.6rem', fontWeight:700, color:'#a8d8d8', letterSpacing:'0.12em', lineHeight:1.2}}>REVIVAL APP</span>
+                    </div>
+                  </div>
+                  <p style={{fontSize:'1rem', fontWeight:700, color:'white', letterSpacing:'0.15em', marginTop:'6px'}}>GUIDED PLAYLISTS</p>
+                </div>
+                {/* Guided Playlists icon top-right */}
+                <div
+                  style={{background:'linear-gradient(135deg,#3a8a8a,#2a6a6a)', borderRadius:'14px', padding:'10px', minWidth:'64px', textAlign:'center', cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,0.25)'}}
+                >
+                  <i data-lucide="play-circle" style={{width:'28px',height:'28px',color:'white',display:'block',margin:'0 auto'}}></i>
+                  <span style={{fontSize:'0.55rem', color:'#c8e8e8', fontWeight:600, letterSpacing:'0.05em', display:'block', marginTop:'4px', lineHeight:1.2}}>Guided{'
+'}Playlists</span>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Playlist rows ── */}
+            <div className="flex-1 flex" style={{overflow:'hidden'}}>
+              {/* Scrollable list */}
+              <div className="flex-1 overflow-y-scroll" style={{paddingRight:'0px'}} id="guided-pl-scroll">
+                <div className="px-4 py-3 space-y-1.5">
+                  {categories.map((cat, idx) => {
+                    const prayerCount = (prayersDatabase[cat.id] || []).length;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => {
+                          setHomeCategory(cat.id);
+                          setDetailPrayerIdx(0);
+                          setScreen('playlist-detail');
+                        }}
+                        className="w-full text-left px-4 py-3 rounded-lg font-medium transition-all active:scale-95"
+                        style={{
+                          background:'rgba(178,216,208,0.75)',
+                          borderLeft:'4px solid #2d7070',
+                          color:'#1a3a3a',
+                          fontSize:'0.92rem',
+                          boxShadow:'0 1px 3px rgba(0,0,0,0.08)',
+                        }}
+                      >
+                        <span>{cat.name}</span>
+                        {prayerCount > 0 && (
+                          <span style={{fontSize:'0.7rem', color:'#4a8a80', marginLeft:'8px', fontWeight:500}}>
+                            ({prayerCount})
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="h-6"></div>
+              </div>
+
+              {/* Scroll indicator strip */}
+              <div className="flex-shrink-0 flex flex-col items-center justify-center" style={{width:'28px', background:'rgba(178,216,208,0.3)', borderLeft:'1px solid rgba(178,216,208,0.6)'}}>
+                <span style={{writingMode:'vertical-rl', transform:'rotate(180deg)', fontSize:'0.6rem', fontWeight:700, color:'#e05555', letterSpacing:'0.1em', userSelect:'none'}}>
+                  SCROLL using side bar
+                </span>
+              </div>
+            </div>
+
+            {/* ── Back button ── */}
+            <div className="flex-shrink-0 px-4 py-3 safe-bottom" style={{background:'rgba(240,235,224,0.95)', borderTop:'1px solid rgba(178,216,208,0.5)'}}>
+              <button
+                onClick={() => setScreen('home')}
+                className="flex items-center gap-2 text-sm font-semibold"
+                style={{color:'#2d7070'}}
+              >
+                <i data-lucide="chevron-left" className="w-5 h-5"></i>
+                Back
+              </button>
+            </div>
+
+          </div>
+        );
+      };
+
       const renderHome = () => {
         // ── LAYOUT ITEM DEFINITIONS ──────────────────────────────────────
         const LAYOUT_ITEMS = [
@@ -2090,6 +2357,17 @@
                   <p className="text-xs opacity-80 mt-0.5">My present Spiritual Battles. Check as many as apply.</p>
                 </div>
               </div>
+            </div>
+            {/* Guided Playlists quick-access button */}
+            <div className="px-4 pb-3">
+              <button
+                onClick={() => setScreen('guided-playlists')}
+                className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-semibold text-sm"
+                style={{background:'rgba(255,255,255,0.18)', color:'white', border:'1px solid rgba(255,255,255,0.3)'}}
+              >
+                <span>📋 Browse Guided Playlists</span>
+                <i data-lucide="chevron-right" className="w-4 h-4 opacity-80"></i>
+              </button>
             </div>
           ),
 
@@ -2165,21 +2443,21 @@
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Add a Loved One</p>
                   <div className="flex gap-2 items-center">
-                    {/* Name input */}
                     <input
                       type="text"
                       value={newLovedOneName}
                       onChange={(e) => setNewLovedOneName(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && newLovedOneName.trim()) {
-                          setLovedOnes(prev => [...prev, {name: newLovedOneName.trim(), gender: newLovedOneGender}]);
+                          const updated = [...lovedOnes, {name: newLovedOneName.trim(), gender: newLovedOneGender}];
+                          setLovedOnes(updated);
+                          try { localStorage.setItem('lovedOnes', JSON.stringify(updated)); } catch(er) {}
                           setNewLovedOneName('');
                         }
                       }}
                       placeholder="Enter name…"
                       className="flex-1 px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
-                    {/* Gender dropdown */}
                     <select
                       value={newLovedOneGender}
                       onChange={(e) => setNewLovedOneGender(e.target.value)}
@@ -2189,11 +2467,12 @@
                       <option value="male">Male</option>
                       <option value="female">Female</option>
                     </select>
-                    {/* + button */}
                     <button
                       onClick={() => {
                         if (newLovedOneName.trim()) {
-                          setLovedOnes(prev => [...prev, {name: newLovedOneName.trim(), gender: newLovedOneGender}]);
+                          const updated = [...lovedOnes, {name: newLovedOneName.trim(), gender: newLovedOneGender}];
+                          setLovedOnes(updated);
+                          try { localStorage.setItem('lovedOnes', JSON.stringify(updated)); } catch(er) {}
                           setNewLovedOneName('');
                         }
                       }}
@@ -2203,56 +2482,129 @@
                           ? 'bg-indigo-600 text-white hover:bg-indigo-700'
                           : 'bg-gray-100 text-gray-300 cursor-not-allowed'
                       }`}
-                      title="Add person"
                     >+</button>
                   </div>
                 </div>
 
-                {/* ── Added people list ── */}
-                {lovedOnes.length > 0 && (
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="px-4 py-2.5 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
-                      <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">
-                        {lovedOnes.length} {lovedOnes.length === 1 ? 'Person' : 'People'} Added
-                      </p>
-                      <button
-                        onClick={() => setLovedOnes([])}
-                        className="text-xs text-indigo-400 hover:text-indigo-600 font-medium"
-                      >Clear all</button>
-                    </div>
-                    {lovedOnes.map((person, idx) => (
-                      <div key={idx} className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-b-0">
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm flex-shrink-0">
-                          {person.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-800 truncate">{person.name}</p>
-                          <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium mt-0.5 ${
-                            person.gender === 'male'
-                              ? 'bg-blue-50 text-blue-600'
-                              : 'bg-pink-50 text-pink-600'
-                          }`}>
-                            {person.gender === 'male' ? '♂ Male' : '♀ Female'}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => setLovedOnes(prev => prev.filter((_, i) => i !== idx))}
-                          className="text-gray-300 hover:text-red-400 transition-colors text-lg leading-none flex-shrink-0 px-1"
-                          title="Remove"
-                        >×</button>
-                      </div>
-                    ))}
+                {/* ── Stacked prayer cards ── */}
+                {lovedOnes.length === 0 && (
+                  <div className="text-center py-12 text-gray-400">
+                    <div className="text-4xl mb-3">🙏</div>
+                    <p className="font-medium">No one added yet</p>
+                    <p className="text-sm mt-1">Enter a name above to begin praying</p>
                   </div>
                 )}
 
-                {/* Placeholder when list is empty */}
-                {lovedOnes.length === 0 && (
-                  <div className="text-center py-8 text-gray-400">
-                    <div className="text-4xl mb-2">🙏</div>
-                    <p className="text-sm font-medium text-gray-500">Add the people you want to pray for</p>
-                    <p className="text-xs mt-1">Enter a name and tap <strong>+</strong></p>
-                  </div>
+                {lovedOnes.map((person, idx) => {
+                  const h = person.gender === 'female' ? 'her' : 'his';
+                  const H = person.gender === 'female' ? 'Her' : 'His';
+                  const prayerText = `I claim ${person.name} as God's purchased possession, in the name of Jesus Christ, on the basis of His shed blood. I claim the tearing down of all the works of Satan in ${h} life; all false doctrine, unbelief, temporal values, hatred, resentment, bitterness, and deceitfulness. I claim that each of ${h} thoughts will be brought into captivity to the obedience of Jesus Christ. And I claim the complete deliverance of ${person.name} from the power and persuasion of the devil. I pray that ${person.name} will be brought into submission, and that ${h} conscience will be convicted and brought to the point of repentance. I pray that ${person.name} will hear and believe God's Word, and that God's will and purpose will be accomplished in and through ${h} life. Thank you Jesus, for hearing and answering my prayer!`;
+
+                  return (
+                    <div key={idx} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      {/* Card header: name + gender + delete */}
+                      <div className="flex items-center justify-between px-4 py-3 bg-indigo-50 border-b border-indigo-100">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-indigo-800 text-base tracking-wide">{person.name.toUpperCase()}</span>
+                          <span className="text-xs text-indigo-400 font-medium">{person.gender === 'female' ? 'Female' : 'Male'}</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const updated = lovedOnes.filter((_, i) => i !== idx);
+                            setLovedOnes(updated);
+                            try { localStorage.setItem('lovedOnes', JSON.stringify(updated)); } catch(er) {}
+                          }}
+                          className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors font-bold text-sm"
+                          title="Remove"
+                        >−</button>
+                      </div>
+
+                      {/* Prayer text + voice selector side by side */}
+                      <div className="flex gap-3 p-4">
+                        {/* Prayer text */}
+                        <div className="flex-1">
+                          <p className="text-gray-700 text-sm leading-relaxed">{prayerText}</p>
+                        </div>
+                        {/* Voice selector */}
+                        <div className="flex-shrink-0 flex flex-col gap-1.5 pt-0.5" style={{minWidth:'72px'}}>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-0.5">Voice</p>
+                          {['francis','jewel','michael'].map(v => (
+                            <label key={v} className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`voice-lo-${idx}`}
+                                value={v}
+                                checked={selectedVoice === v}
+                                onChange={() => {
+                                  setSelectedVoice(v);
+                                  try { localStorage.setItem('selectedVoice', v); } catch(er) {}
+                                }}
+                                className="accent-indigo-600"
+                              />
+                              <span className="text-xs text-gray-600 font-medium capitalize">{v.charAt(0).toUpperCase() + v.slice(1)}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Play / Download buttons */}
+                      <div className="flex gap-2 px-4 pb-4">
+                        <button
+                          onClick={() => {
+                            if (!('speechSynthesis' in window)) return;
+                            window.speechSynthesis.cancel();
+                            const utter = new SpeechSynthesisUtterance(prayerText);
+                            utter.rate = 0.85;
+                            utter.pitch = 1.0;
+                            const allVoices = window.speechSynthesis.getVoices();
+                            const enVoices = allVoices.filter(v => v.lang.startsWith('en'));
+                            const voicePrefs = {
+                              francis: ['Daniel','Fred','Tom','Gordon','Aaron','Microsoft David','Google UK English Male'],
+                              jewel:   ['Samantha','Karen','Victoria','Moira','Tessa','Microsoft Zira','Google US English'],
+                              michael: ['Daniel','Tom','Fred','Microsoft David','Google UK English Male','Aaron'],
+                            };
+                            const prefs = voicePrefs[selectedVoice] || [];
+                            let chosen = null;
+                            for (const name of prefs) {
+                              chosen = enVoices.find(v => v.name.includes(name));
+                              if (chosen) break;
+                            }
+                            if (!chosen && enVoices.length > 0) chosen = enVoices[0];
+                            if (chosen) utter.voice = chosen;
+                            window.speechSynthesis.speak(utter);
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors"
+                        >
+                          <i data-lucide="play" className="w-4 h-4"></i> Play
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Copy prayer text to clipboard as simple "download"
+                            if (navigator.clipboard) {
+                              navigator.clipboard.writeText(prayerText).then(() => {
+                                alert('Prayer text copied to clipboard!');
+                              });
+                            }
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
+                        >
+                          <i data-lucide="copy" className="w-4 h-4"></i> Copy
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {lovedOnes.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setLovedOnes([]);
+                      try { localStorage.setItem('lovedOnes', JSON.stringify([])); } catch(er) {}
+                    }}
+                    className="w-full py-2 text-xs text-gray-400 hover:text-red-500 font-medium transition-colors"
+                  >Clear all names</button>
                 )}
+
               </div>
             </div>
           ) : (
@@ -2321,7 +2673,7 @@
                 <div className="flex-1">
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1.5">Voice</p>
                   <div className="flex gap-1.5">
-                    {['francis','jewel','alex'].map(v => (
+                    {['francis','jewel','michael'].map(v => (
                       <button
                         key={v}
                         onClick={() => setSelectedVoice(v)}
@@ -2576,9 +2928,9 @@
                   Jewel
                 </button>
                 <button
-                  onClick={() => setSelectedVoice('alex')}
+                  onClick={() => setSelectedVoice('michael')}
                   className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm transition-all ${
-                    selectedVoice === 'alex'
+                    selectedVoice === 'michael'
                       ? 'bg-indigo-600 border-indigo-600 text-white'
                       : 'bg-white border-gray-300 text-gray-700'
                   }`}
@@ -3152,7 +3504,7 @@
                   const voicePrefs = {
                     francis: ['Daniel', 'Fred', 'Tom', 'Gordon', 'Aaron', 'Microsoft David', 'Google UK English Male'],
                     jewel:   ['Samantha', 'Karen', 'Victoria', 'Moira', 'Tessa', 'Microsoft Zira', 'Google US English'],
-                    alex:    ['Alex', 'Microsoft Mark', 'Google UK English Male', 'Fred', 'Tom'],
+                    michael: ['Daniel', 'Tom', 'Fred', 'Microsoft David', 'Google UK English Male', 'Aaron'],
                   };
                   const prefs = voicePrefs[selectedVoice] || voicePrefs.francis;
                   const match = prefs.reduce((found, name) =>
@@ -3190,6 +3542,8 @@
 
       return (
         <div className="h-screen w-screen overflow-hidden">
+          {screen === 'playlist-detail' && renderPlaylistDetail()}
+          {screen === 'guided-playlists' && renderGuidedPlaylists()}
           {screen === 'home' && renderHome()}
           {screen === 'prayers' && renderPrayers()}
           {screen === 'detail' && renderDetail()}
