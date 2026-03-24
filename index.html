@@ -1520,7 +1520,7 @@
     };
 
     function App() {
-      const [screen, setScreen] = useState('home');
+      const [screen, setScreen] = useState('ipra-home');
       const [currentTheme, setCurrentTheme] = useState('sage');
       const [showThemePicker, setShowThemePicker] = useState(false);
       const [selectedCategories, setSelectedCategories] = useState([]);
@@ -1529,6 +1529,11 @@
       const [showMore, setShowMore] = useState(false);
       const [homeCategory, setHomeCategory] = useState('all');
       const [detailPrayerIdx, setDetailPrayerIdx] = useState(0); // selected prayer in playlist detail
+      const [topicalSearch, setTopicalSearch] = useState('');
+      const [topicalCategory, setTopicalCategory] = useState('');
+      const [topicalChecked, setTopicalChecked] = useState({});   // {title: true}
+      const [topicalPlayQueue, setTopicalPlayQueue] = useState([]);
+      const [topicalCurrentPlaying, setTopicalCurrentPlaying] = useState(-1);
       const [layoutOrder, setLayoutOrder] = useState(['header','tabs','searchcat','prayerlist','bottombar','action']);
       const [showLayoutPicker, setShowLayoutPicker] = useState(false);
       const [searchQuery, setSearchQuery] = useState('');
@@ -2036,6 +2041,392 @@
       };
 
       // Home Screen
+      const renderIPRAHome = () => {
+        return (
+          <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
+            {/* Header */}
+            <div className="pt-12 px-6 pb-4 safe-top flex-shrink-0">
+              <div className="flex items-end gap-2 mb-1">
+                <span style={{fontFamily:'Georgia,serif',fontWeight:900,fontStyle:'italic',fontSize:'3rem',color:'#1a1a1a',lineHeight:1}}>i</span>
+                <span style={{fontWeight:900,fontSize:'2.4rem',color:'#1a1a1a',letterSpacing:'0.04em',lineHeight:1}}>PRA</span>
+                <div className="ml-1 flex flex-col pb-1">
+                  <span style={{fontSize:'0.85rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.15}}>PERSONAL</span>
+                  <span style={{fontSize:'0.85rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.15}}>REVIVAL APP</span>
+                </div>
+              </div>
+              <p style={{fontSize:'1.2rem',fontWeight:500,color:'#1a1a1a',marginTop:'4px'}}>Winning Your Spiritual Battles</p>
+            </div>
+
+            {/* 4 Navigation Tiles */}
+            <div className="flex-1 px-5 overflow-y-auto hide-scrollbar">
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <button
+                  onClick={() => setScreen('guided-playlists')}
+                  className="rounded-2xl p-5 flex flex-col gap-3 transition-all active:scale-95"
+                  style={{background:'linear-gradient(145deg,#4a9a9a 0%,#1e5050 100%)',aspectRatio:'1',boxShadow:'0 4px 16px rgba(30,80,80,0.3)'}}
+                >
+                  <i data-lucide="list" style={{width:'40px',height:'40px',color:'white'}}></i>
+                  <span style={{fontSize:'1.05rem',fontWeight:700,color:'white',textAlign:'left',lineHeight:1.25}}>Guided Playlists</span>
+                </button>
+                <button
+                  onClick={() => setScreen('topical-prayers')}
+                  className="rounded-2xl p-5 flex flex-col gap-3 transition-all active:scale-95"
+                  style={{background:'linear-gradient(145deg,#4a9a9a 0%,#1e5050 100%)',aspectRatio:'1',boxShadow:'0 4px 16px rgba(30,80,80,0.3)'}}
+                >
+                  <i data-lucide="shield" style={{width:'40px',height:'40px',color:'white'}}></i>
+                  <span style={{fontSize:'1.05rem',fontWeight:700,color:'white',textAlign:'left',lineHeight:1.25}}>Topical Prayers</span>
+                </button>
+                <button
+                  onClick={() => { setPrayerType('loved-one'); setScreen('home'); }}
+                  className="rounded-2xl p-5 flex flex-col gap-3 transition-all active:scale-95"
+                  style={{background:'linear-gradient(145deg,#4a9a9a 0%,#1e5050 100%)',aspectRatio:'1',boxShadow:'0 4px 16px rgba(30,80,80,0.3)'}}
+                >
+                  <i data-lucide="users" style={{width:'40px',height:'40px',color:'white'}}></i>
+                  <span style={{fontSize:'1.05rem',fontWeight:700,color:'white',textAlign:'left',lineHeight:1.25}}>Prayer for Loved Ones</span>
+                </button>
+                <button
+                  onClick={() => setScreen('my-playlists')}
+                  className="rounded-2xl p-5 flex flex-col gap-3 transition-all active:scale-95"
+                  style={{background:'linear-gradient(145deg,#4a9a9a 0%,#1e5050 100%)',aspectRatio:'1',boxShadow:'0 4px 16px rgba(30,80,80,0.3)'}}
+                >
+                  <i data-lucide="bookmark" style={{width:'40px',height:'40px',color:'white'}}></i>
+                  <span style={{fontSize:'1.05rem',fontWeight:700,color:'white',textAlign:'left',lineHeight:1.25}}>My Prayer Playlists</span>
+                </button>
+              </div>
+
+              {/* Bottom Links */}
+              <div className="space-y-3 pb-6">
+                <button
+                  onClick={() => window.open('https://calendly.com','_blank')}
+                  className="w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all active:scale-95"
+                  style={{background:'rgba(178,216,208,0.65)',border:'none'}}
+                >
+                  <i data-lucide="monitor" style={{width:'28px',height:'28px',color:'#2d7070',flexShrink:0}}></i>
+                  <span style={{fontSize:'1rem',fontWeight:600,color:'#1a3a3a'}}>Free Prayer Zooms</span>
+                </button>
+                <button
+                  onClick={() => window.open('https://forms.cloud.microsoft/r/siE4W9TBjk','_blank')}
+                  className="w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all active:scale-95"
+                  style={{background:'rgba(178,216,208,0.65)',border:'none'}}
+                >
+                  <i data-lucide="message-circle" style={{width:'28px',height:'28px',color:'#2d7070',flexShrink:0}}></i>
+                  <span style={{fontSize:'1rem',fontWeight:600,color:'#1a3a3a'}}>Feedback</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const renderMyPlaylists = () => {
+        const loved = lovedOnes;
+        return (
+          <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
+            <div className="pt-10 px-5 pb-3 safe-top flex-shrink-0" style={{background:'#f0ebe0'}}>
+              <div className="flex items-end gap-2 mb-1">
+                <span style={{fontFamily:'Georgia,serif',fontWeight:900,fontStyle:'italic',fontSize:'2.4rem',color:'#1a1a1a',lineHeight:1}}>i</span>
+                <span style={{fontWeight:900,fontSize:'2rem',color:'#1a1a1a',letterSpacing:'0.04em',lineHeight:1}}>PRA</span>
+                <div className="ml-1 flex flex-col pb-0.5">
+                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.15}}>PERSONAL</span>
+                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.15}}>REVIVAL APP</span>
+                </div>
+              </div>
+              <p style={{fontSize:'1rem',fontWeight:800,color:'#1a1a1a',letterSpacing:'0.12em',marginTop:'4px'}}>MY PRAYER PLAYLISTS</p>
+            </div>
+            <div className="flex-1 overflow-y-auto hide-scrollbar px-4 py-3">
+              {loved.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="text-5xl mb-4">🙏</div>
+                  <p className="font-semibold text-gray-600 mb-2">No playlists yet</p>
+                  <p className="text-sm text-gray-500 mb-6">Add loved ones on the Prayer for Loved Ones page to create personal prayer playlists.</p>
+                  <button
+                    onClick={() => { setPrayerType('loved-one'); setScreen('home'); }}
+                    className="px-6 py-3 rounded-xl font-semibold text-white"
+                    style={{background:'linear-gradient(135deg,#3a8a8a,#1e5050)'}}
+                  >Add Loved Ones</button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {loved.map((person, idx) => {
+                    const h = person.gender === 'female' ? 'her' : 'his';
+                    const preview = 'I claim ' + person.name + ' as God\'s purchased possession...';
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => { setPrayerType('loved-one'); setScreen('home'); }}
+                        className="w-full text-left px-4 py-3 rounded-xl transition-all active:scale-95"
+                        style={{background:'rgba(178,216,208,0.75)',border:'1px solid rgba(150,200,190,0.5)'}}
+                      >
+                        <p className="font-bold text-base" style={{color:'#1e5050'}}>{person.name.toUpperCase()}</p>
+                        <p className="text-xs mt-0.5" style={{color:'#4a7070'}}>{person.gender === 'female' ? 'Female' : 'Male'} &bull; {preview}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <div className="flex-shrink-0 px-4 py-3 safe-bottom" style={{background:'rgba(240,235,224,0.97)',borderTop:'1px solid rgba(178,216,208,0.5)'}}>
+              <button onClick={() => setScreen('ipra-home')} className="flex items-center gap-1 text-sm font-semibold" style={{color:'#2d7070'}}>
+                <i data-lucide="chevron-left" className="w-5 h-5"></i>
+                Home
+              </button>
+            </div>
+          </div>
+        );
+      };
+
+      const renderTopicalPlay = () => {
+        const queue = topicalPlayQueue;
+        const cur = topicalCurrentPlaying;
+
+        const playAll = () => {
+          window.speechSynthesis.cancel();
+          const allVoices = window.speechSynthesis.getVoices();
+          const enVoices = allVoices.filter(v => v.lang.startsWith('en'));
+          const voicePrefs = {
+            francis: ['Daniel','Fred','Tom','Gordon','Aaron','Microsoft David'],
+            jewel:   ['Samantha','Karen','Victoria','Moira','Tessa','Microsoft Zira'],
+            michael: ['Daniel','Tom','Fred','Microsoft David','Aaron'],
+          };
+          const prefs = voicePrefs[selectedVoice] || [];
+          let chosen = null;
+          for (const n of prefs) { chosen = enVoices.find(v => v.name.includes(n)); if (chosen) break; }
+          if (!chosen && enVoices.length) chosen = enVoices[0];
+
+          const speakIdx = (i) => {
+            if (i >= queue.length) { setTopicalCurrentPlaying(-1); return; }
+            setTopicalCurrentPlaying(i);
+            const utter = new SpeechSynthesisUtterance(queue[i].prayer || queue[i].title);
+            utter.rate = 0.85;
+            if (chosen) utter.voice = chosen;
+            utter.onend = () => speakIdx(i + 1);
+            window.speechSynthesis.speak(utter);
+          };
+          speakIdx(0);
+        };
+
+        return (
+          <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
+            <div className="pt-10 px-5 pb-3 safe-top flex-shrink-0" style={{background:'linear-gradient(135deg,#1e5050,#2d7070)'}}>
+              <div className="flex items-end gap-2 mb-1">
+                <span style={{fontFamily:'Georgia,serif',fontWeight:900,fontStyle:'italic',fontSize:'2.4rem',color:'white',lineHeight:1}}>i</span>
+                <span style={{fontWeight:900,fontSize:'2rem',color:'white',letterSpacing:'0.04em',lineHeight:1}}>PRA</span>
+                <div className="ml-1 flex flex-col pb-0.5">
+                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#a8d8d8',letterSpacing:'0.1em',lineHeight:1.15}}>PERSONAL</span>
+                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#a8d8d8',letterSpacing:'0.1em',lineHeight:1.15}}>REVIVAL APP</span>
+                </div>
+              </div>
+              <p style={{fontSize:'0.9rem',fontWeight:800,color:'white',letterSpacing:'0.12em',marginTop:'4px'}}>NOW PLAYING</p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto hide-scrollbar px-4 py-3 space-y-2">
+              {queue.map((p, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl p-4 transition-all"
+                  style={{
+                    background: i === cur ? 'rgba(45,112,112,0.2)' : 'rgba(178,216,208,0.5)',
+                    border: i === cur ? '2px solid #2d7070' : '1px solid rgba(150,200,190,0.4)',
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    {i === cur && <i data-lucide="volume-2" style={{width:'16px',height:'16px',color:'#2d7070',flexShrink:0}}></i>}
+                    <p className="font-bold text-sm" style={{color:'#1e5050'}}>{p.title}</p>
+                  </div>
+                  {i === cur && p.prayer && (
+                    <p className="text-sm leading-relaxed" style={{color:'#1a3a3a'}}>{p.prayer}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex-shrink-0 px-4 py-4 safe-bottom" style={{background:'rgba(240,235,224,0.97)',borderTop:'1px solid rgba(178,216,208,0.5)'}}>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-medium" style={{color:'#4a7070'}}>
+                  {cur >= 0 ? ('Playing ' + (cur+1) + ' of ' + queue.length) : (queue.length + ' prayers ready')}
+                </p>
+                <div className="flex gap-2">
+                  {['francis','jewel','michael'].map(v => (
+                    <button
+                      key={v}
+                      onClick={() => { setSelectedVoice(v); try { localStorage.setItem('selectedVoice',v); } catch(e) {} }}
+                      className="px-2 py-1 rounded text-xs font-semibold transition-all"
+                      style={{background: selectedVoice===v ? '#2d7070' : 'rgba(178,216,208,0.5)', color: selectedVoice===v ? 'white' : '#1e5050'}}
+                    >{v.charAt(0).toUpperCase()+v.slice(1)}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={playAll}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white transition-all active:scale-95"
+                  style={{background:'linear-gradient(135deg,#2d7070,#1e5050)',boxShadow:'0 4px 12px rgba(30,80,80,0.3)'}}
+                >
+                  <i data-lucide="play" style={{width:'20px',height:'20px',color:'white'}}></i>
+                  Play All
+                </button>
+                <button
+                  onClick={() => { window.speechSynthesis.cancel(); setTopicalCurrentPlaying(-1); setScreen('topical-detail'); }}
+                  className="px-5 py-3 rounded-xl font-semibold transition-all active:scale-95"
+                  style={{background:'rgba(178,216,208,0.6)',color:'#1e5050'}}
+                >Stop</button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const renderTopicalDetail = () => {
+        const cat = categories.find(c => c.id === topicalCategory) || {name: topicalCategory};
+        const prayers = prayersDatabase[topicalCategory] || [];
+        const checkedCount = Object.values(topicalChecked).filter(Boolean).length;
+
+        return (
+          <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
+            <div className="pt-10 px-5 pb-3 safe-top flex-shrink-0" style={{background:'#f0ebe0'}}>
+              <div className="flex items-end gap-2 mb-1">
+                <span style={{fontFamily:'Georgia,serif',fontWeight:900,fontStyle:'italic',fontSize:'2.4rem',color:'#1a1a1a',lineHeight:1}}>i</span>
+                <span style={{fontWeight:900,fontSize:'2rem',color:'#1a1a1a',letterSpacing:'0.04em',lineHeight:1}}>PRA</span>
+                <div className="ml-1 flex flex-col pb-0.5">
+                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.15}}>PERSONAL</span>
+                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.15}}>REVIVAL APP</span>
+                </div>
+              </div>
+              <p style={{fontSize:'1rem',fontWeight:800,color:'#1a1a1a',letterSpacing:'0.12em',marginTop:'4px'}}>TOPICAL PLAYLISTS</p>
+              <p style={{fontSize:'0.95rem',fontWeight:600,color:'#2d7070',marginTop:'2px'}}>{cat.name}</p>
+            </div>
+
+            <div className="flex-1 flex" style={{overflow:'hidden'}}>
+              <div className="flex-1 overflow-y-scroll px-4 py-2 space-y-1.5">
+                {prayers.map((p, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      const next = Object.assign({}, topicalChecked);
+                      next[p.title] = !next[p.title];
+                      setTopicalChecked(next);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all active:scale-95"
+                    style={{
+                      background: topicalChecked[p.title] ? 'rgba(45,112,112,0.2)' : 'rgba(178,216,208,0.75)',
+                      border: topicalChecked[p.title] ? '2px solid #2d7070' : '1px solid rgba(150,200,190,0.5)',
+                      textAlign:'left',
+                    }}
+                  >
+                    <div
+                      className="flex-shrink-0 flex items-center justify-center rounded"
+                      style={{width:'20px',height:'20px',border:'2px solid #2d7070',background: topicalChecked[p.title] ? '#2d7070' : 'white'}}
+                    >
+                      {topicalChecked[p.title] && <i data-lucide="check" style={{width:'12px',height:'12px',color:'white'}}></i>}
+                    </div>
+                    <span style={{fontSize:'0.95rem',fontWeight:500,color:'#1a1a1a'}}>{p.title}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex-shrink-0 flex items-center justify-center" style={{width:'24px',background:'rgba(178,216,208,0.3)',borderLeft:'1px solid rgba(178,216,208,0.6)'}}>
+                <div style={{width:'6px',height:'80px',background:'#3a8a8a',borderRadius:'3px'}}></div>
+              </div>
+            </div>
+
+            {checkedCount > 0 && (
+              <div className="flex-shrink-0 px-4 pb-4 pt-3" style={{background:'rgba(240,235,224,0.97)',borderTop:'1px solid rgba(178,216,208,0.5)'}}>
+                <button
+                  onClick={() => {
+                    const queue = prayers.filter(p => topicalChecked[p.title]);
+                    setTopicalPlayQueue(queue);
+                    setTopicalCurrentPlaying(-1);
+                    setScreen('topical-play');
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-white transition-all active:scale-95"
+                  style={{background:'linear-gradient(135deg,#2d7070,#1e5050)',boxShadow:'0 4px 16px rgba(30,80,80,0.35)',fontSize:'1rem'}}
+                >
+                  <i data-lucide="play-circle" style={{width:'22px',height:'22px',color:'white'}}></i>
+                  Play {checkedCount} Prayer{checkedCount !== 1 ? 's' : ''}
+                </button>
+              </div>
+            )}
+
+            <div className="flex-shrink-0 px-4 py-3 safe-bottom" style={{background:'rgba(240,235,224,0.97)',borderTop:'1px solid rgba(178,216,208,0.4)'}}>
+              <button onClick={() => setScreen('topical-prayers')} className="flex items-center gap-1 text-sm font-semibold" style={{color:'#2d7070'}}>
+                <i data-lucide="chevron-left" className="w-5 h-5"></i>
+                Topical Playlists
+              </button>
+            </div>
+          </div>
+        );
+      };
+
+      const renderTopicalPrayers = () => {
+        const filtered = categories.filter(c => c.name.toLowerCase().includes(topicalSearch.toLowerCase()));
+        return (
+          <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
+            <div className="pt-10 px-5 pb-3 safe-top flex-shrink-0" style={{background:'#f0ebe0'}}>
+              <div className="flex items-end gap-2 mb-1">
+                <span style={{fontFamily:'Georgia,serif',fontWeight:900,fontStyle:'italic',fontSize:'2.4rem',color:'#1a1a1a',lineHeight:1}}>i</span>
+                <span style={{fontWeight:900,fontSize:'2rem',color:'#1a1a1a',letterSpacing:'0.04em',lineHeight:1}}>PRA</span>
+                <div className="ml-1 flex flex-col pb-0.5">
+                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.15}}>PERSONAL</span>
+                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.15}}>REVIVAL APP</span>
+                </div>
+              </div>
+              <p style={{fontSize:'1rem',fontWeight:800,color:'#1a1a1a',letterSpacing:'0.12em',marginTop:'4px'}}>TOPICAL PLAYLISTS</p>
+            </div>
+
+            <div className="px-4 pb-2 flex-shrink-0">
+              <p className="text-sm font-medium mb-1.5" style={{color:'#4a6a6a'}}>Search {categories.length} Playlists</p>
+              <div className="flex gap-2 items-center rounded" style={{border:'2px solid #1a1a1a',background:'rgba(255,255,255,0.85)',padding:'2px 8px'}}>
+                <input
+                  type="text"
+                  value={topicalSearch}
+                  onChange={e => setTopicalSearch(e.target.value)}
+                  placeholder="Type to filter..."
+                  className="flex-1 py-2 text-sm focus:outline-none"
+                  style={{background:'transparent',color:'#1a1a1a'}}
+                />
+                {topicalSearch.length > 0 && (
+                  <button onClick={() => setTopicalSearch('')} style={{color:'#4a7070',fontSize:'1.2rem',lineHeight:1}}>&times;</button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 flex" style={{overflow:'hidden'}}>
+              <div className="flex-1 overflow-y-scroll px-4 py-2 space-y-1.5">
+                {filtered.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setTopicalCategory(cat.id);
+                      const prayers = prayersDatabase[cat.id] || [];
+                      const checked = {};
+                      prayers.forEach(p => { checked[p.title] = true; });
+                      setTopicalChecked(checked);
+                      setScreen('topical-detail');
+                    }}
+                    className="w-full text-left px-4 py-3 rounded-lg transition-all active:scale-95"
+                    style={{background:'rgba(178,216,208,0.75)',border:'1px solid rgba(150,200,190,0.5)',color:'#1a1a1a',fontSize:'0.95rem',fontWeight:500,boxShadow:'0 1px 3px rgba(0,0,0,0.06)'}}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+                {filtered.length === 0 && (
+                  <p className="text-center py-8 text-sm" style={{color:'#6a9a9a'}}>No playlists match your search</p>
+                )}
+              </div>
+              <div className="flex-shrink-0 flex items-center justify-center" style={{width:'24px',background:'rgba(178,216,208,0.3)',borderLeft:'1px solid rgba(178,216,208,0.6)'}}>
+                <div style={{width:'6px',height:'80px',background:'#3a8a8a',borderRadius:'3px'}}></div>
+              </div>
+            </div>
+
+            <div className="flex-shrink-0 px-4 py-3 safe-bottom" style={{background:'rgba(240,235,224,0.97)',borderTop:'1px solid rgba(178,216,208,0.5)'}}>
+              <button onClick={() => setScreen('ipra-home')} className="flex items-center gap-1 text-sm font-semibold" style={{color:'#2d7070'}}>
+                <i data-lucide="chevron-left" className="w-5 h-5"></i>
+                Home
+              </button>
+            </div>
+          </div>
+        );
+      };
+
       const renderPlaylistDetail = () => {
         const playlist = categories.find(c => c.id === homeCategory) || {name: homeCategory, id: homeCategory};
         const prayers  = prayersDatabase[homeCategory] || [];
@@ -3539,6 +3930,11 @@
 
       return (
         <div className="h-screen w-screen overflow-hidden">
+          {screen === 'ipra-home' && renderIPRAHome()}
+          {screen === 'topical-prayers' && renderTopicalPrayers()}
+          {screen === 'topical-detail' && renderTopicalDetail()}
+          {screen === 'topical-play' && renderTopicalPlay()}
+          {screen === 'my-playlists' && renderMyPlaylists()}
           {screen === 'playlist-detail' && renderPlaylistDetail()}
           {screen === 'guided-playlists' && renderGuidedPlaylists()}
           {screen === 'home' && renderHome()}
