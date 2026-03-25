@@ -1685,6 +1685,8 @@
       });           // [{name, gender}]
       const [newLovedOneName, setNewLovedOneName] = useState('');
       const [newLovedOneGender, setNewLovedOneGender] = useState('male');
+      const [lovedOnePlayerIdx, setLovedOnePlayerIdx] = useState(0);
+      const [loLoading, setLoLoading] = useState(false);
       const [showDownloadPopup, setShowDownloadPopup] = useState(false);
       const [downloadStatus, setDownloadStatus] = useState('');
       const [downloadOptions, setDownloadOptions] = useState({
@@ -2088,7 +2090,7 @@
                 </button>
                 {/* Prayer for Loved Ones - two figures + heart */}
                 <button
-                  onClick={() => { setPrayerType('loved-one'); setScreen('home'); }}
+                  onClick={() => setScreen('prayer-for-loved-ones')}
                   className="rounded-2xl p-5 flex flex-col gap-3 transition-all active:scale-95"
                   style={{background:'linear-gradient(145deg,#4a9a9a 0%,#1e5050 100%)',aspectRatio:'1',boxShadow:'0 4px 16px rgba(30,80,80,0.3)',padding:'20px'}}
                 >
@@ -2452,6 +2454,254 @@
                 <i data-lucide="chevron-left" className="w-5 h-5"></i>
                 Home
               </button>
+            </div>
+          </div>
+        );
+      };
+
+      const renderPrayerForLovedOnes = () => {
+        const addPerson = () => {
+          if (!newLovedOneName.trim()) return;
+          const updated = [...lovedOnes, {name: newLovedOneName.trim(), gender: newLovedOneGender}];
+          setLovedOnes(updated);
+          try { localStorage.setItem('lovedOnes', JSON.stringify(updated)); } catch(er) {}
+          setNewLovedOneName('');
+          setNewLovedOneGender('male');
+        };
+        const removePerson = (idx) => {
+          const updated = lovedOnes.filter((_, i) => i !== idx);
+          setLovedOnes(updated);
+          try { localStorage.setItem('lovedOnes', JSON.stringify(updated)); } catch(er) {}
+        };
+        const updatePerson = (idx, field, val) => {
+          const updated = lovedOnes.map((p, i) => i === idx ? {...p, [field]: val} : p);
+          setLovedOnes(updated);
+          try { localStorage.setItem('lovedOnes', JSON.stringify(updated)); } catch(er) {}
+        };
+        const handleLoad = () => {
+          if (lovedOnes.length === 0) return;
+          setLoLoading(true);
+          setTimeout(() => {
+            setLoLoading(false);
+            setLovedOnePlayerIdx(0);
+            setScreen('loved-one-player');
+          }, 1200);
+        };
+        return (
+          <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
+            <div className="pt-10 px-5 pb-2 safe-top flex-shrink-0">
+              <div className="flex items-end gap-2 mb-1">
+                <span style={{fontFamily:'Georgia,serif',fontWeight:900,fontStyle:'italic',fontSize:'2.2rem',color:'#1a1a1a',lineHeight:1}}>i</span>
+                <span style={{fontWeight:900,fontSize:'1.8rem',color:'#1a1a1a',letterSpacing:'0.04em',lineHeight:1}}>PRA</span>
+                <div className="ml-1 flex flex-col pb-0.5">
+                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.2}}>PERSONAL</span>
+                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.2}}>REVIVAL APP</span>
+                </div>
+              </div>
+              <p style={{fontWeight:800,fontSize:'1rem',color:'#1a1a1a',letterSpacing:'0.08em',marginTop:'6px'}}>PRAYER FOR LOVED ONES</p>
+            </div>
+            <div className="flex-1 flex" style={{overflow:'hidden'}}>
+              <div className="flex-1 overflow-y-auto px-5 pt-3 pb-4" style={{scrollbarWidth:'none'}}>
+                <p style={{textAlign:'center',fontWeight:700,fontSize:'0.8rem',color:'#444',letterSpacing:'0.1em',marginBottom:'12px'}}>LIST YOUR LOVED ONE</p>
+                {lovedOnes.map((person, idx) => (
+                  <div key={idx} className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg" style={{background:'rgba(74,154,154,0.18)',border:'1px solid rgba(74,154,154,0.3)'}}>
+                    <input
+                      type="text"
+                      value={person.name}
+                      onChange={(e) => updatePerson(idx, 'name', e.target.value)}
+                      style={{flex:1,background:'transparent',border:'none',borderBottom:'2px solid #1a1a1a',fontWeight:700,fontSize:'0.95rem',color:'#1a1a1a',textTransform:'uppercase',outline:'none',paddingBottom:'2px'}}
+                    />
+                    <select
+                      value={person.gender}
+                      onChange={(e) => updatePerson(idx, 'gender', e.target.value)}
+                      style={{background:'transparent',border:'none',fontSize:'0.8rem',color:'#444',fontWeight:600,cursor:'pointer',outline:'none'}}
+                    >
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                    <button
+                      onClick={() => removePerson(idx)}
+                      style={{width:'24px',height:'24px',borderRadius:'50%',background:'rgba(180,60,60,0.15)',border:'none',color:'#a03030',fontWeight:900,fontSize:'1rem',cursor:'pointer',lineHeight:1,display:'flex',alignItems:'center',justifyContent:'center'}}
+                    >-</button>
+                  </div>
+                ))}
+                <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg" style={{background:'rgba(200,210,205,0.3)',border:'1px solid rgba(150,170,165,0.4)'}}>
+                  <input
+                    type="text"
+                    value={newLovedOneName}
+                    onChange={(e) => setNewLovedOneName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') addPerson(); }}
+                    placeholder="loved one's name"
+                    style={{flex:1,background:'transparent',border:'none',borderBottom:'1px solid #999',fontSize:'0.9rem',color:'#666',fontStyle:'italic',outline:'none',paddingBottom:'2px'}}
+                  />
+                  <select
+                    value={newLovedOneGender}
+                    onChange={(e) => setNewLovedOneGender(e.target.value)}
+                    style={{background:'transparent',border:'none',fontSize:'0.8rem',color:'#666',cursor:'pointer',outline:'none'}}
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                  <button
+                    onClick={addPerson}
+                    style={{width:'28px',height:'28px',borderRadius:'50%',background:'rgba(74,154,154,0.3)',border:'1px solid #4a9a9a',color:'#1e5050',fontWeight:900,fontSize:'1.1rem',cursor:'pointer',lineHeight:1,display:'flex',alignItems:'center',justifyContent:'center'}}
+                  >+</button>
+                </div>
+                {[0,1].map(i => (
+                  <div key={'empty-'+i} className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg" style={{background:'rgba(200,210,205,0.15)',border:'1px solid rgba(150,170,165,0.25)'}}>
+                    <span style={{flex:1,borderBottom:'1px solid #bbb',fontSize:'0.9rem',color:'#bbb',fontStyle:'italic',paddingBottom:'2px'}}>loved one's name</span>
+                    <span style={{fontSize:'0.8rem',color:'#bbb'}}>V +</span>
+                  </div>
+                ))}
+                <div className="mt-4 mb-4 px-4 py-3 rounded-xl" style={{border:'1.5px solid #b0c4bc',background:'rgba(240,235,224,0.8)',textAlign:'center'}}>
+                  {loLoading ? (
+                    <p style={{fontWeight:700,fontSize:'0.9rem',color:'#2d7070',letterSpacing:'0.05em'}}>LOADING YOUR PRAYERS...</p>
+                  ) : (
+                    <p style={{fontWeight:700,fontSize:'0.85rem',color:'#444',letterSpacing:'0.04em',lineHeight:1.5}}>PLEASE BE PATIENT{'\u000A'}WHILE YOUR NAMES LOAD</p>
+                  )}
+                </div>
+              </div>
+              <div style={{width:'8px',background:'linear-gradient(180deg,#4a9a9a 0%,#1e5050 100%)',borderRadius:'0 4px 4px 0',flexShrink:0,margin:'8px 0'}}></div>
+            </div>
+            <div className="flex-shrink-0 pb-8 pt-3 flex flex-col items-center gap-1" style={{borderTop:'1px solid #ddd4c4'}}>
+              <button
+                onClick={handleLoad}
+                disabled={lovedOnes.length === 0 || loLoading}
+                style={{width:'64px',height:'64px',borderRadius:'50%',background: lovedOnes.length === 0 ? '#ccc' : 'linear-gradient(135deg,#4a9a9a,#1e5050)',border:'none',display:'flex',alignItems:'center',justifyContent:'center',cursor: lovedOnes.length === 0 ? 'not-allowed' : 'pointer',boxShadow:'0 4px 14px rgba(30,80,80,0.35)'}}
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="white" stroke="none">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+              </button>
+              <span style={{fontSize:'0.75rem',fontWeight:700,color:'#2d7070',letterSpacing:'0.1em'}}>LOAD</span>
+              <button
+                onClick={() => setScreen('ipra-home')}
+                style={{marginTop:'4px',fontSize:'0.8rem',fontWeight:600,color:'#888',background:'none',border:'none',cursor:'pointer'}}
+              >Back</button>
+            </div>
+          </div>
+        );
+      };
+
+      const renderLovedOnePlayer = () => {
+        const person = lovedOnes[lovedOnePlayerIdx] || {name: '', gender: 'male'};
+        const h = person.gender === 'female' ? 'her' : 'his';
+        const getPrayerText = (p) => {
+          const ph = p.gender === 'female' ? 'her' : 'his';
+          return 'I claim ' + p.name + ' as God\'s purchased possession, in the name of Jesus Christ, on the basis of His shed blood. I claim the tearing down of all the works of Satan in ' + ph + ' life; all false doctrine, unbelief, temporal values, hatred, resentment, bitterness, and deceitfulness. I claim that each of ' + ph + ' thoughts will be brought into captivity to the obedience of Jesus Christ. And I claim the complete deliverance of ' + p.name + ' from the power and persuasion of the devil. I pray that ' + p.name + ' will be brought into submission, and that ' + ph + ' conscience will be convicted and brought to the point of repentance. I pray that ' + p.name + ' will hear and believe God\'s Word, and that God\'s will and purpose will be accomplished in and through ' + ph + ' life. Thank you Jesus, for hearing and answering my prayer!';
+        };
+        const prayerText = getPrayerText(person);
+        const speakAt = (idx) => {
+          if (!('speechSynthesis' in window)) return;
+          window.speechSynthesis.cancel();
+          const p = lovedOnes[idx];
+          if (!p) return;
+          const text = getPrayerText(p);
+          const utter = new SpeechSynthesisUtterance(text);
+          utter.rate = 0.85;
+          const allVoices = window.speechSynthesis.getVoices();
+          const enVoices = allVoices.filter(v => v.lang.startsWith('en'));
+          const voicePrefs = {
+            francis: ['Daniel','Fred','Tom','Gordon','Aaron','Microsoft David','Google UK English Male'],
+            jewel:   ['Samantha','Karen','Victoria','Moira','Tessa','Microsoft Zira','Google US English'],
+            michael: ['Daniel','Tom','Fred','Microsoft David','Google UK English Male','Aaron'],
+          };
+          const prefs = voicePrefs[selectedVoice] || voicePrefs.francis;
+          const match = prefs.reduce((found, name) => found || enVoices.find(v => v.name === name), null);
+          if (match) utter.voice = match;
+          utter.onend = () => {
+            if (idx + 1 < lovedOnes.length) {
+              setLovedOnePlayerIdx(idx + 1);
+              speakAt(idx + 1);
+            }
+          };
+          window.speechSynthesis.speak(utter);
+        };
+        const goTo = (idx) => {
+          window.speechSynthesis.cancel();
+          setLovedOnePlayerIdx(idx);
+        };
+        const parts = person.name ? prayerText.split(person.name) : [prayerText];
+        return (
+          <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
+            <div className="pt-10 px-5 pb-2 safe-top flex-shrink-0">
+              <div className="flex items-end gap-2 mb-1">
+                <span style={{fontFamily:'Georgia,serif',fontWeight:900,fontStyle:'italic',fontSize:'2.2rem',color:'#1a1a1a',lineHeight:1}}>i</span>
+                <span style={{fontWeight:900,fontSize:'1.8rem',color:'#1a1a1a',letterSpacing:'0.04em',lineHeight:1}}>PRA</span>
+                <div className="ml-1 flex flex-col pb-0.5">
+                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.2}}>PERSONAL</span>
+                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.2}}>REVIVAL APP</span>
+                </div>
+              </div>
+            </div>
+            <div className="px-5 py-2 flex-shrink-0 flex items-center gap-3" style={{borderBottom:'1px solid #ddd4c4'}}>
+              <span style={{fontSize:'0.85rem',fontWeight:600,color:'#444'}}>Read By</span>
+              {['francis','jewel','michael'].map(v => (
+                <label key={v} style={{display:'flex',alignItems:'center',gap:'4px',cursor:'pointer'}}>
+                  <input
+                    type="radio"
+                    name="lo-player-voice"
+                    value={v}
+                    checked={selectedVoice === v}
+                    onChange={() => { setSelectedVoice(v); try { localStorage.setItem('selectedVoice', v); } catch(er) {} }}
+                    style={{accentColor:'#2d7070'}}
+                  />
+                  <span style={{fontSize:'0.85rem',color:'#333'}}>{v.charAt(0).toUpperCase() + v.slice(1)}</span>
+                </label>
+              ))}
+            </div>
+            <div className="px-4 py-3 flex-shrink-0" style={{borderBottom:'1px solid #ddd4c4'}}>
+              <div style={{display:'flex',alignItems:'center',gap:'8px',background:'#e8e0d0',borderRadius:'8px',padding:'8px 14px',border:'2px solid #b8a890'}}>
+                <button
+                  onClick={() => goTo(Math.max(0, lovedOnePlayerIdx - 1))}
+                  style={{fontSize:'1.4rem',color:'#2d7070',fontWeight:'bold',background:'none',border:'none',cursor:'pointer',padding:'0 4px',lineHeight:1}}
+                >&#9664;</button>
+                <select
+                  value={lovedOnePlayerIdx}
+                  onChange={(e) => goTo(parseInt(e.target.value))}
+                  style={{flex:1,background:'transparent',border:'none',fontWeight:700,fontSize:'1rem',color:'#1a1a1a',textAlign:'center',cursor:'pointer',outline:'none'}}
+                >
+                  {lovedOnes.map((p, i) => (
+                    <option key={i} value={i}>{p.name.toUpperCase()}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => goTo(Math.min(lovedOnes.length - 1, lovedOnePlayerIdx + 1))}
+                  style={{fontSize:'1.4rem',color:'#2d7070',fontWeight:'bold',background:'none',border:'none',cursor:'pointer',padding:'0 4px',lineHeight:1}}
+                >&#9654;</button>
+              </div>
+            </div>
+            <div className="flex-1 flex" style={{overflow:'hidden'}}>
+              <div className="flex-1 overflow-y-auto px-5 pt-4 pb-4">
+                <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',borderBottom:'2px solid #1a1a1a',paddingBottom:'6px',marginBottom:'14px'}}>
+                  <span style={{fontWeight:900,fontSize:'1.15rem',color:'#1a1a1a',letterSpacing:'0.06em'}}>{person.name.toUpperCase()}</span>
+                  <span style={{fontSize:'0.78rem',color:'#555',fontWeight:600}}>{person.gender === 'female' ? 'Female' : 'Male'} V −</span>
+                </div>
+                <p style={{fontSize:'0.97rem',lineHeight:1.8,color:'#1a1a1a'}}>
+                  {parts.map((part, i) => (
+                    <span key={i}>{part}{i < parts.length - 1 && (<span style={{fontWeight:800,textDecoration:'underline'}}>{person.name}</span>)}</span>
+                  ))}
+                </p>
+              </div>
+              <div style={{width:'8px',background:'linear-gradient(180deg,#4a9a9a 0%,#1e5050 100%)',borderRadius:'0 4px 4px 0',flexShrink:0,margin:'8px 0'}}></div>
+            </div>
+            <div className="flex gap-3 px-5 py-4 flex-shrink-0" style={{borderTop:'1px solid #ddd4c4'}}>
+              <button
+                onClick={() => speakAt(lovedOnePlayerIdx)}
+                style={{flex:1,background:'linear-gradient(135deg,#4a9a9a,#1e5050)',color:'white',fontWeight:700,border:'none',borderRadius:'12px',padding:'12px',fontSize:'0.95rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'6px'}}
+              >
+                <span style={{fontSize:'1rem'}}>&#9654;</span> Play
+              </button>
+              <button
+                onClick={() => window.speechSynthesis.cancel()}
+                style={{flex:1,background:'#e8e0d0',color:'#1a1a1a',fontWeight:700,border:'1px solid #b8a890',borderRadius:'12px',padding:'12px',fontSize:'0.95rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'6px'}}
+              >
+                <span style={{fontSize:'1rem'}}>&#9632;</span> Stop
+              </button>
+              <button
+                onClick={() => { window.speechSynthesis.cancel(); setScreen('prayer-for-loved-ones'); }}
+                style={{flex:1,background:'#e8e0d0',color:'#2d7070',fontWeight:700,border:'1px solid #b8a890',borderRadius:'12px',padding:'12px',fontSize:'0.95rem',cursor:'pointer'}}
+              >Back</button>
             </div>
           </div>
         );
@@ -3965,6 +4215,8 @@
           {screen === 'topical-detail' && renderTopicalDetail()}
           {screen === 'topical-play' && renderTopicalPlay()}
           {screen === 'my-playlists' && renderMyPlaylists()}
+          {screen === 'prayer-for-loved-ones' && renderPrayerForLovedOnes()}
+          {screen === 'loved-one-player' && renderLovedOnePlayer()}
           {screen === 'playlist-detail' && renderPlaylistDetail()}
           {screen === 'guided-playlists' && renderGuidedPlaylists()}
           {screen === 'home' && renderHome()}
