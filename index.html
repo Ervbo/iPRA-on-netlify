@@ -2243,6 +2243,22 @@
                       <p style={{fontWeight:800,fontSize:'0.93rem',color:'#1e5050'}}>{pl.name}</p>
                       <p style={{fontSize:'0.72rem',color:'#667',marginTop:'1px'}}>{pl.people.length} {pl.people.length === 1 ? 'person' : 'people'}</p>
                     </div>
+                    {/* Edit button — loads people into Loved Ones page for editing */}
+                    <button
+                      onClick={() => {
+                        setLovedOnes([...pl.people]);
+                        try { localStorage.setItem('lovedOnes', JSON.stringify(pl.people)); } catch(er) {}
+                        setScreen('prayer-for-loved-ones');
+                      }}
+                      title="Edit playlist"
+                      style={{width:'32px',height:'32px',borderRadius:'50%',background:'rgba(74,154,154,0.18)',border:'1.5px solid #4a9a9a',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2d7070" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    {/* Play button */}
                     <button
                       onClick={() => {
                         setLovedOnes(pl.people);
@@ -2250,16 +2266,19 @@
                         setLovedOnePlayerIdx(0);
                         setScreen('loved-one-player');
                       }}
+                      title="Play playlist"
                       style={{width:'32px',height:'32px',borderRadius:'50%',background:'linear-gradient(135deg,#4a9a9a,#1e5050)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3" /></svg>
                     </button>
+                    {/* Delete button */}
                     <button
                       onClick={() => {
                         const updated = personalPlaylists.filter((_, i) => i !== idx);
                         setPersonalPlaylists(updated);
                         try { localStorage.setItem('personalPlaylists', JSON.stringify(updated)); } catch(er) {}
                       }}
+                      title="Delete playlist"
                       style={{width:'28px',height:'28px',borderRadius:'50%',background:'rgba(180,60,60,0.12)',border:'none',color:'#a03030',fontWeight:900,fontSize:'0.9rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
                     >x</button>
                   </div>
