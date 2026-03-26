@@ -2003,13 +2003,23 @@
       };
 
       const getAllPrayers = () => {
+        // Titles excluded from Guided Prayers (exact lowercase match)
+        const excluded = new Set([
+          'abortion (healing from)',
+          'abused (as a teenager \u2013 need healing)',
+          'abused (as an adult \u2013 need healing)',
+          'discipline (lack of)',
+          'stubborness',
+          'rich (obsesssed with)',
+        ]);
         const all = [];
-        const seen = new Set();
+        const seen = new Set(); // case-insensitive dedup key
         Object.keys(prayersDatabase).forEach(cat => {
           if (prayersDatabase[cat]) {
             prayersDatabase[cat].forEach(p => {
-              if (!seen.has(p.title)) {
-                seen.add(p.title);
+              const key = p.title ? p.title.toLowerCase() : '';
+              if (!seen.has(key) && !excluded.has(key)) {
+                seen.add(key);
                 all.push({...p, category: cat});
               }
             });
@@ -3218,14 +3228,84 @@
                 <button
                   onClick={() => { if (totalChecked > 0) setShowDownloadPopup(true); }}
                   disabled={totalChecked === 0}
-                  style={{flex:1,background: totalChecked > 0 ? '#e8e0d0' : '#eee',color: totalChecked > 0 ? '#1a3a3a' : '#aaa',fontWeight:700,border:'1px solid #b8a890',borderRadius:'12px',padding:'12px',fontSize:'0.95rem',cursor: totalChecked > 0 ? 'pointer' : 'not-allowed'}}
-                >Download</button>
+                  style={{flex:1,background: totalChecked > 0 ? 'linear-gradient(135deg,#2d7070,#1e5050)' : '#ccc',color:'white',fontWeight:700,border:'none',borderRadius:'12px',padding:'12px',fontSize:'0.95rem',cursor: totalChecked > 0 ? 'pointer' : 'not-allowed',display:'flex',alignItems:'center',justifyContent:'center',gap:'6px'}}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:'4px'}}>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  {totalChecked > 0 ? ('Download ' + totalChecked) : 'Download'}
+                </button>
               </div>
               <button
                 onClick={() => setScreen('ipra-home')}
                 style={{fontSize:'0.88rem',fontWeight:700,color:'#2d7070',background:'none',border:'none',cursor:'pointer'}}
               >&#8592; Back</button>
             </div>
+
+            {/* Download popup */}
+            {showDownloadPopup && (
+              <div
+                style={{position:'fixed',inset:0,zIndex:2000,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'flex-end',justifyContent:'center'}}
+                onClick={() => setShowDownloadPopup(false)}
+              >
+                <div
+                  style={{background:'white',borderRadius:'24px 24px 0 0',width:'100%',maxWidth:'480px',padding:'24px',paddingBottom:'36px'}}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div style={{width:'40px',height:'4px',background:'#e5e7eb',borderRadius:'2px',margin:'0 auto 20px'}}></div>
+                  <h3 style={{fontSize:'18px',fontWeight:'700',color:'#111827',marginBottom:'6px'}}>Download Options</h3>
+                  <p style={{fontSize:'13px',color:'#6b7280',marginBottom:'20px'}}>
+                    Choose how to download your {totalChecked} selected prayer{totalChecked !== 1 ? 's' : ''}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowDownloadPopup(false);
+                      setDownloadStatus('Preparing individual audio files\u2026');
+                      setTimeout(() => {
+                        setDownloadStatus('\u2713 Individual audio files are ready on the website');
+                        setTimeout(() => setDownloadStatus(''), 4000);
+                      }, 1500);
+                    }}
+                    style={{width:'100%',display:'flex',alignItems:'flex-start',gap:'14px',padding:'16px',borderRadius:'14px',border:'2px solid #e5e7eb',background:'white',cursor:'pointer',marginBottom:'10px',textAlign:'left'}}
+                  >
+                    <div style={{width:'40px',height:'40px',borderRadius:'10px',background:'#e6f4f4',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2d7070" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p style={{fontSize:'15px',fontWeight:'600',color:'#111827',marginBottom:'2px'}}>Individual ZIP</p>
+                      <p style={{fontSize:'12px',color:'#6b7280',lineHeight:'1.4'}}>One audio file per prayer — packaged as a ZIP archive</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDownloadPopup(false);
+                      setDownloadStatus('Preparing group audio\u2026');
+                      setTimeout(() => {
+                        setDownloadStatus('\u2713 Group file is ready on the website');
+                        setTimeout(() => setDownloadStatus(''), 4000);
+                      }, 1500);
+                    }}
+                    style={{width:'100%',display:'flex',alignItems:'flex-start',gap:'14px',padding:'16px',borderRadius:'14px',border:'2px solid #e5e7eb',background:'white',cursor:'pointer',marginBottom:'20px',textAlign:'left'}}
+                  >
+                    <div style={{width:'40px',height:'40px',borderRadius:'10px',background:'#e6f4f4',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2d7070" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p style={{fontSize:'15px',fontWeight:'600',color:'#111827',marginBottom:'2px'}}>Group</p>
+                      <p style={{fontSize:'12px',color:'#6b7280',lineHeight:'1.4'}}>All prayers joined into one continuous audio file</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setShowDownloadPopup(false)}
+                    style={{width:'100%',padding:'14px',borderRadius:'14px',border:'none',background:'#f3f4f6',color:'#374151',fontSize:'15px',fontWeight:'600',cursor:'pointer'}}
+                  >Cancel</button>
+                </div>
+              </div>
+            )}
 
           </div>
         );
