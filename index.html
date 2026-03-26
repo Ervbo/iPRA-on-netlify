@@ -1687,6 +1687,14 @@
       const [newLovedOneGender, setNewLovedOneGender] = useState('male');
       const [lovedOnePlayerIdx, setLovedOnePlayerIdx] = useState(0);
       const [loLoading, setLoLoading] = useState(false);
+      const [showSaveDialog, setShowSaveDialog] = useState(false);
+      const [newPlaylistName, setNewPlaylistName] = useState('');
+      const [personalPlaylists, setPersonalPlaylists] = useState(() => {
+        try {
+          const saved = localStorage.getItem('personalPlaylists');
+          return saved ? JSON.parse(saved) : [];
+        } catch(e) { return []; }
+      });
       const [showDownloadPopup, setShowDownloadPopup] = useState(false);
       const [downloadStatus, setDownloadStatus] = useState('');
       const [downloadOptions, setDownloadOptions] = useState({
@@ -2478,17 +2486,73 @@
           setLovedOnes(updated);
           try { localStorage.setItem('lovedOnes', JSON.stringify(updated)); } catch(er) {}
         };
-        const handleLoad = () => {
-          if (lovedOnes.length === 0) return;
+        const goToPlayer = () => {
           setLoLoading(true);
           setTimeout(() => {
             setLoLoading(false);
             setLovedOnePlayerIdx(0);
             setScreen('loved-one-player');
-          }, 1200);
+          }, 1000);
+        };
+        const handleLoad = () => {
+          if (lovedOnes.length === 0) return;
+          setShowSaveDialog(true);
+        };
+        const savePlaylist = () => {
+          const name = newPlaylistName.trim();
+          if (!name) return;
+          const updated = [...personalPlaylists, {name, people: [...lovedOnes]}];
+          setPersonalPlaylists(updated);
+          try { localStorage.setItem('personalPlaylists', JSON.stringify(updated)); } catch(er) {}
+          setNewPlaylistName('');
+          setShowSaveDialog(false);
+          goToPlayer();
+        };
+        const deletePlaylist = (idx) => {
+          const updated = personalPlaylists.filter((_, i) => i !== idx);
+          setPersonalPlaylists(updated);
+          try { localStorage.setItem('personalPlaylists', JSON.stringify(updated)); } catch(er) {}
+        };
+        const loadPlaylist = (pl) => {
+          setLovedOnes(pl.people);
+          try { localStorage.setItem('lovedOnes', JSON.stringify(pl.people)); } catch(er) {}
+          setLovedOnePlayerIdx(0);
+          setScreen('loved-one-player');
         };
         return (
-          <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
+          <div className="flex flex-col h-full" style={{background:'#f0ebe0',position:'relative'}}>
+
+            {/* Save Dialog Overlay */}
+            {showSaveDialog && (
+              <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',zIndex:50,display:'flex',alignItems:'center',justifyContent:'center',padding:'24px'}}>
+                <div style={{background:'#f0ebe0',borderRadius:'20px',padding:'28px 24px',width:'100%',maxWidth:'340px',boxShadow:'0 8px 32px rgba(0,0,0,0.25)'}}>
+                  <p style={{fontWeight:800,fontSize:'1.1rem',color:'#1a1a1a',marginBottom:'6px',textAlign:'center'}}>Save as Personal Playlist?</p>
+                  <p style={{fontSize:'0.85rem',color:'#555',textAlign:'center',marginBottom:'20px',lineHeight:1.5}}>Give this list a name so you can use it again later.</p>
+                  <input
+                    type="text"
+                    value={newPlaylistName}
+                    onChange={(e) => setNewPlaylistName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && newPlaylistName.trim()) savePlaylist(); }}
+                    placeholder="e.g. Family, Suffering, Church..."
+                    autoFocus={true}
+                    style={{width:'100%',padding:'12px 14px',borderRadius:'10px',border:'2px solid #4a9a9a',fontSize:'1rem',fontWeight:600,color:'#1a1a1a',background:'white',outline:'none',marginBottom:'16px',boxSizing:'border-box'}}
+                  />
+                  <div style={{display:'flex',gap:'10px'}}>
+                    <button
+                      onClick={() => { setShowSaveDialog(false); setNewPlaylistName(''); goToPlayer(); }}
+                      style={{flex:1,padding:'12px',borderRadius:'10px',border:'1.5px solid #b8a890',background:'#e8e0d0',color:'#555',fontWeight:700,fontSize:'0.9rem',cursor:'pointer'}}
+                    >Skip, just play</button>
+                    <button
+                      onClick={savePlaylist}
+                      disabled={!newPlaylistName.trim()}
+                      style={{flex:1,padding:'12px',borderRadius:'10px',border:'none',background: newPlaylistName.trim() ? 'linear-gradient(135deg,#4a9a9a,#1e5050)' : '#ccc',color:'white',fontWeight:700,fontSize:'0.9rem',cursor: newPlaylistName.trim() ? 'pointer' : 'not-allowed'}}
+                    >Save &amp; Play</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Header */}
             <div className="pt-10 px-5 pb-2 safe-top flex-shrink-0">
               <div className="flex items-end gap-2 mb-1">
                 <span style={{fontFamily:'Georgia,serif',fontWeight:900,fontStyle:'italic',fontSize:'2.2rem',color:'#1a1a1a',lineHeight:1}}>i</span>
@@ -2500,8 +2564,40 @@
               </div>
               <p style={{fontWeight:800,fontSize:'1rem',color:'#1a1a1a',letterSpacing:'0.08em',marginTop:'6px'}}>PRAYER FOR LOVED ONES</p>
             </div>
+
             <div className="flex-1 flex" style={{overflow:'hidden'}}>
               <div className="flex-1 overflow-y-auto px-5 pt-3 pb-4" style={{scrollbarWidth:'none'}}>
+
+                {/* Saved Personal Playlists */}
+                {personalPlaylists.length > 0 && (
+                  <div className="mb-4">
+                    <p style={{fontWeight:700,fontSize:'0.78rem',color:'#2d7070',letterSpacing:'0.1em',marginBottom:'8px',textTransform:'uppercase'}}>My Personal Playlists</p>
+                    {personalPlaylists.map((pl, idx) => (
+                      <div key={idx} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px',background:'linear-gradient(135deg,rgba(74,154,154,0.25),rgba(30,80,80,0.15))',borderRadius:'10px',padding:'10px 12px',border:'1px solid rgba(74,154,154,0.4)'}}>
+                        <button
+                          onClick={() => loadPlaylist(pl)}
+                          style={{flex:1,background:'none',border:'none',textAlign:'left',cursor:'pointer',padding:0}}
+                        >
+                          <span style={{fontWeight:800,fontSize:'0.95rem',color:'#1e5050'}}>{pl.name}</span>
+                          <span style={{fontSize:'0.75rem',color:'#666',marginLeft:'8px'}}>{pl.people.length} {pl.people.length === 1 ? 'person' : 'people'}</span>
+                        </button>
+                        <button
+                          onClick={() => loadPlaylist(pl)}
+                          style={{width:'32px',height:'32px',borderRadius:'50%',background:'linear-gradient(135deg,#4a9a9a,#1e5050)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                        </button>
+                        <button
+                          onClick={() => deletePlaylist(idx)}
+                          style={{width:'28px',height:'28px',borderRadius:'50%',background:'rgba(180,60,60,0.12)',border:'none',color:'#a03030',fontWeight:900,fontSize:'1rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
+                        >x</button>
+                      </div>
+                    ))}
+                    <div style={{borderTop:'1px solid #d0c8b8',marginBottom:'14px',marginTop:'4px'}}></div>
+                  </div>
+                )}
+
+                {/* List your loved one */}
                 <p style={{textAlign:'center',fontWeight:700,fontSize:'0.8rem',color:'#444',letterSpacing:'0.1em',marginBottom:'12px'}}>LIST YOUR LOVED ONE</p>
                 {lovedOnes.map((person, idx) => (
                   <div key={idx} className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg" style={{background:'rgba(74,154,154,0.18)',border:'1px solid rgba(74,154,154,0.3)'}}>
@@ -2553,16 +2649,18 @@
                     <span style={{fontSize:'0.8rem',color:'#bbb'}}>V +</span>
                   </div>
                 ))}
+
                 <div className="mt-4 mb-4 px-4 py-3 rounded-xl" style={{border:'1.5px solid #b0c4bc',background:'rgba(240,235,224,0.8)',textAlign:'center'}}>
                   {loLoading ? (
                     <p style={{fontWeight:700,fontSize:'0.9rem',color:'#2d7070',letterSpacing:'0.05em'}}>LOADING YOUR PRAYERS...</p>
                   ) : (
-                    <p style={{fontWeight:700,fontSize:'0.85rem',color:'#444',letterSpacing:'0.04em',lineHeight:1.5}}>PLEASE BE PATIENT{'\u000A'}WHILE YOUR NAMES LOAD</p>
+                    <p style={{fontWeight:700,fontSize:'0.85rem',color:'#444',letterSpacing:'0.04em',lineHeight:1.6}}>PLEASE BE PATIENT WHILE YOUR NAMES LOAD</p>
                   )}
                 </div>
               </div>
               <div style={{width:'8px',background:'linear-gradient(180deg,#4a9a9a 0%,#1e5050 100%)',borderRadius:'0 4px 4px 0',flexShrink:0,margin:'8px 0'}}></div>
             </div>
+
             <div className="flex-shrink-0 pb-8 pt-3 flex flex-col items-center gap-1" style={{borderTop:'1px solid #ddd4c4'}}>
               <button
                 onClick={handleLoad}
