@@ -2116,7 +2116,7 @@
                 </button>
                 {/* Prayer for Loved Ones */}
                 <button
-                  onClick={() => setScreen('prayer-for-loved-ones')}
+                  onClick={() => { setLovedOnes([]); setScreen('prayer-for-loved-ones'); }}
                   className="rounded-2xl transition-all active:scale-95"
                   style={{background:'linear-gradient(145deg,#4a9a9a 0%,#1e5050 100%)',aspectRatio:'1',boxShadow:'0 4px 16px rgba(30,80,80,0.3)',padding:'18px',display:'flex',flexDirection:'column',justifyContent:'space-between',alignItems:'flex-start'}}
                 >
@@ -2773,21 +2773,25 @@
               <div style={{width:'8px',background:'linear-gradient(180deg,#4a9a9a 0%,#1e5050 100%)',borderRadius:'0 4px 4px 0',flexShrink:0,margin:'8px 0'}}></div>
             </div>
 
-            <div className="flex-shrink-0 pb-8 pt-3 flex flex-col items-center gap-1" style={{borderTop:'1px solid #ddd4c4'}}>
-              <button
-                onClick={handleLoad}
-                disabled={lovedOnes.length === 0 || loLoading}
-                style={{width:'64px',height:'64px',borderRadius:'50%',background: lovedOnes.length === 0 ? '#ccc' : 'linear-gradient(135deg,#4a9a9a,#1e5050)',border:'none',display:'flex',alignItems:'center',justifyContent:'center',cursor: lovedOnes.length === 0 ? 'not-allowed' : 'pointer',boxShadow:'0 4px 14px rgba(30,80,80,0.35)'}}
-              >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="white" stroke="none">
-                  <polygon points="5 3 19 12 5 21 5 3" />
-                </svg>
-              </button>
-              <span style={{fontSize:'0.75rem',fontWeight:700,color:'#2d7070',letterSpacing:'0.1em'}}>LOAD</span>
-              <button
-                onClick={() => setScreen('ipra-home')}
-                style={{marginTop:'4px',fontSize:'0.8rem',fontWeight:600,color:'#888',background:'none',border:'none',cursor:'pointer'}}
-              >Back</button>
+            <div className="flex-shrink-0" style={{borderTop:'1px solid #ddd4c4'}}>
+              <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',paddingTop:'12px',paddingBottom:'8px'}}>
+                <button
+                  onClick={handleLoad}
+                  disabled={lovedOnes.length === 0 || loLoading}
+                  style={{width:'64px',height:'64px',borderRadius:'50%',background: lovedOnes.length === 0 ? '#ccc' : 'linear-gradient(135deg,#4a9a9a,#1e5050)',border:'none',display:'flex',alignItems:'center',justifyContent:'center',cursor: lovedOnes.length === 0 ? 'not-allowed' : 'pointer',boxShadow:'0 4px 14px rgba(30,80,80,0.35)'}}
+                >
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="white" stroke="none">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                </button>
+                <span style={{fontSize:'0.75rem',fontWeight:700,color:'#2d7070',letterSpacing:'0.1em'}}>LOAD</span>
+              </div>
+              <div className="px-5 pb-6 safe-bottom">
+                <button
+                  onClick={() => setScreen('ipra-home')}
+                  style={{fontSize:'0.9rem',fontWeight:700,color:'#2d7070',background:'none',border:'none',cursor:'pointer'}}
+                >&#8592; Back</button>
+              </div>
             </div>
           </div>
         );
@@ -3150,8 +3154,8 @@
                 </div>
               </div>
               {/* Search bar */}
-              <div style={{display:'flex',alignItems:'center',background:'rgba(255,255,255,0.18)',borderRadius:'10px',padding:'8px 12px',gap:'8px'}}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <div style={{display:'flex',alignItems:'center',background:'rgba(255,255,255,0.92)',borderRadius:'10px',padding:'8px 12px',gap:'8px'}}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2d7070" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
                 <input
@@ -3159,10 +3163,10 @@
                   value={guidedSearch}
                   onChange={(e) => setGuidedSearch(e.target.value)}
                   placeholder="Search all 179 prayers..."
-                  style={{flex:1,background:'transparent',border:'none',outline:'none',color:'white',fontSize:'0.9rem',fontWeight:500}}
+                  style={{flex:1,background:'transparent',border:'none',outline:'none',color:'#1a1a1a',fontSize:'0.9rem',fontWeight:500}}
                 />
                 {guidedSearch ? (
-                  <button onClick={() => setGuidedSearch('')} style={{background:'none',border:'none',color:'white',cursor:'pointer',fontSize:'1.2rem',padding:0,lineHeight:1}}>x</button>
+                  <button onClick={() => setGuidedSearch('')} style={{background:'none',border:'none',color:'#2d7070',cursor:'pointer',fontSize:'1.2rem',padding:0,lineHeight:1}}>x</button>
                 ) : null}
               </div>
             </div>
