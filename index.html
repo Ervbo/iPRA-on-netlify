@@ -1695,6 +1695,12 @@
           return saved ? JSON.parse(saved) : [];
         } catch(e) { return []; }
       });
+      const [prayerFavorites, setPrayerFavorites] = useState(() => {
+        try {
+          const saved = localStorage.getItem('prayerFavorites');
+          return saved ? JSON.parse(saved) : [];
+        } catch(e) { return []; }
+      });
       const [showDownloadPopup, setShowDownloadPopup] = useState(false);
       const [downloadStatus, setDownloadStatus] = useState('');
       const [downloadOptions, setDownloadOptions] = useState({
@@ -2159,10 +2165,48 @@
       };
 
       const renderMyPlaylists = () => {
-        const loved = lovedOnes;
+        const battleFavs = prayerFavorites.filter(f => f.type === 'battle');
+        const lovedFavs  = prayerFavorites.filter(f => f.type === 'loved-one');
+        const removeFav = (key) => {
+          const updated = prayerFavorites.filter(f => f.key !== key);
+          setPrayerFavorites(updated);
+          try { localStorage.setItem('prayerFavorites', JSON.stringify(updated)); } catch(er) {}
+        };
+        const playBattleFav = (fav) => {
+          setTopicalCategory(fav.category);
+          setTopicalChecked({0: true});
+          setTopicalPlayQueue([fav]);
+          setTopicalCurrentPlaying(-1);
+          setScreen('topical-play');
+        };
+        const playLovedFav = (fav) => {
+          const people = [{name: fav.name, gender: fav.gender}];
+          setLovedOnes(people);
+          try { localStorage.setItem('lovedOnes', JSON.stringify(people)); } catch(er) {}
+          setLovedOnePlayerIdx(0);
+          setScreen('loved-one-player');
+        };
+        const hasAnything = personalPlaylists.length > 0 || battleFavs.length > 0 || lovedFavs.length > 0;
+        const SectionHeader = ({label}) => (
+          <p style={{fontWeight:700,fontSize:'0.78rem',color:'#2d7070',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:'8px',marginTop:'16px'}}>{label}</p>
+        );
+        const tileRow = (label, sub, onPlay, onRemove, playColor) => (
+          <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px',background: playColor || 'rgba(74,154,154,0.18)',borderRadius:'10px',padding:'10px 12px',border:'1px solid rgba(74,154,154,0.35)'}}>
+            <div style={{flex:1,minWidth:0}}>
+              <p style={{fontWeight:800,fontSize:'0.93rem',color:'#1e5050',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{label}</p>
+              {sub && <p style={{fontSize:'0.72rem',color:'#667',marginTop:'1px'}}>{sub}</p>}
+            </div>
+            <button onClick={onPlay} style={{width:'32px',height:'32px',borderRadius:'50%',background:'linear-gradient(135deg,#4a9a9a,#1e5050)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+            </button>
+            {onRemove && (
+              <button onClick={onRemove} style={{width:'28px',height:'28px',borderRadius:'50%',background:'rgba(180,60,60,0.12)',border:'none',color:'#c03040',fontWeight:900,fontSize:'1rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>&#10084;</button>
+            )}
+          </div>
+        );
         return (
           <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
-            <div className="pt-10 px-5 pb-3 safe-top flex-shrink-0" style={{background:'#f0ebe0'}}>
+            <div className="pt-10 px-5 pb-3 safe-top flex-shrink-0">
               <div className="flex items-end gap-2 mb-1">
                 <span style={{fontFamily:'Georgia,serif',fontWeight:900,fontStyle:'italic',fontSize:'2.4rem',color:'#1a1a1a',lineHeight:1}}>i</span>
                 <span style={{fontWeight:900,fontSize:'2rem',color:'#1a1a1a',letterSpacing:'0.04em',lineHeight:1}}>PRA</span>
@@ -2171,44 +2215,82 @@
                   <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.15}}>REVIVAL APP</span>
                 </div>
               </div>
-              <p style={{fontSize:'1rem',fontWeight:800,color:'#1a1a1a',letterSpacing:'0.12em',marginTop:'4px'}}>MY PRAYER PLAYLISTS</p>
+              <p style={{fontSize:'1rem',fontWeight:800,color:'#1a1a1a',letterSpacing:'0.1em',marginTop:'4px'}}>MY LIBRARY</p>
             </div>
-            <div className="flex-1 overflow-y-auto hide-scrollbar px-4 py-3">
-              {loved.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="text-5xl mb-4">🙏</div>
-                  <p className="font-semibold text-gray-600 mb-2">No playlists yet</p>
-                  <p className="text-sm text-gray-500 mb-6">Add loved ones on the Prayer for Loved Ones page to create personal prayer playlists.</p>
-                  <button
-                    onClick={() => { setPrayerType('loved-one'); setScreen('home'); }}
-                    className="px-6 py-3 rounded-xl font-semibold text-white"
-                    style={{background:'linear-gradient(135deg,#3a8a8a,#1e5050)'}}
-                  >Add Loved Ones</button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {loved.map((person, idx) => {
-                    const h = person.gender === 'female' ? 'her' : 'his';
-                    const preview = 'I claim ' + person.name + ' as God\'s purchased possession...';
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => { setPrayerType('loved-one'); setScreen('home'); }}
-                        className="w-full text-left px-4 py-3 rounded-xl transition-all active:scale-95"
-                        style={{background:'rgba(178,216,208,0.75)',border:'1px solid rgba(150,200,190,0.5)'}}
-                      >
-                        <p className="font-bold text-base" style={{color:'#1e5050'}}>{person.name.toUpperCase()}</p>
-                        <p className="text-xs mt-0.5" style={{color:'#4a7070'}}>{person.gender === 'female' ? 'Female' : 'Male'} &bull; {preview}</p>
-                      </button>
-                    );
-                  })}
+
+            <div className="flex-1 overflow-y-auto px-4 py-2 hide-scrollbar">
+              {!hasAnything && (
+                <div style={{textAlign:'center',paddingTop:'60px'}}>
+                  <p style={{fontSize:'3rem',marginBottom:'12px'}}>🙏</p>
+                  <p style={{fontWeight:700,color:'#555',marginBottom:'8px'}}>Your library is empty</p>
+                  <p style={{fontSize:'0.85rem',color:'#888',lineHeight:1.5}}>Save Personal Playlists on the Loved Ones page, or tap the heart icon while a prayer is playing to add Favorites.</p>
                 </div>
               )}
+
+              {personalPlaylists.length > 0 && (
+                <div>
+                  <SectionHeader label="Personal Playlists" />
+                  {personalPlaylists.map((pl, idx) => (
+                    <div key={idx} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px',background:'rgba(74,154,154,0.22)',borderRadius:'10px',padding:'10px 12px',border:'1px solid rgba(74,154,154,0.4)'}}>
+                      <div style={{flex:1}}>
+                        <p style={{fontWeight:800,fontSize:'0.93rem',color:'#1e5050'}}>{pl.name}</p>
+                        <p style={{fontSize:'0.72rem',color:'#667',marginTop:'1px'}}>{pl.people.length} {pl.people.length === 1 ? 'person' : 'people'}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setLovedOnes(pl.people);
+                          try { localStorage.setItem('lovedOnes', JSON.stringify(pl.people)); } catch(er) {}
+                          setLovedOnePlayerIdx(0);
+                          setScreen('loved-one-player');
+                        }}
+                        style={{width:'32px',height:'32px',borderRadius:'50%',background:'linear-gradient(135deg,#4a9a9a,#1e5050)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                      </button>
+                      <button
+                        onClick={() => {
+                          const updated = personalPlaylists.filter((_, i) => i !== idx);
+                          setPersonalPlaylists(updated);
+                          try { localStorage.setItem('personalPlaylists', JSON.stringify(updated)); } catch(er) {}
+                        }}
+                        style={{width:'28px',height:'28px',borderRadius:'50%',background:'rgba(180,60,60,0.12)',border:'none',color:'#a03030',fontWeight:900,fontSize:'0.9rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
+                      >x</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {battleFavs.length > 0 && (
+                <div>
+                  <SectionHeader label="Favorite Battle Prayers" />
+                  {battleFavs.map((fav) => tileRow(
+                    fav.title,
+                    fav.category ? fav.category.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()) : '',
+                    () => playBattleFav(fav),
+                    () => removeFav(fav.key),
+                    'rgba(220,180,180,0.25)'
+                  ))}
+                </div>
+              )}
+
+              {lovedFavs.length > 0 && (
+                <div>
+                  <SectionHeader label="Favorite Loved Ones" />
+                  {lovedFavs.map((fav) => tileRow(
+                    fav.name,
+                    fav.gender === 'female' ? 'Female' : 'Male',
+                    () => playLovedFav(fav),
+                    () => removeFav(fav.key),
+                    'rgba(180,220,210,0.3)'
+                  ))}
+                </div>
+              )}
+              <div style={{height:'16px'}}></div>
             </div>
-            <div className="flex-shrink-0 px-4 py-3 safe-bottom" style={{background:'rgba(240,235,224,0.97)',borderTop:'1px solid rgba(178,216,208,0.5)'}}>
-              <button onClick={() => setScreen('ipra-home')} className="flex items-center gap-1 text-sm font-semibold" style={{color:'#2d7070'}}>
-                <i data-lucide="chevron-left" className="w-5 h-5"></i>
-                Home
+
+            <div className="flex-shrink-0 px-5 py-3 safe-bottom" style={{borderTop:'1px solid #ddd4c4'}}>
+              <button onClick={() => setScreen('ipra-home')} style={{fontSize:'0.9rem',fontWeight:700,color:'#2d7070',background:'none',border:'none',cursor:'pointer'}}>
+                &#8592; Home
               </button>
             </div>
           </div>
@@ -2296,19 +2378,37 @@
                   ))}
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   onClick={playAll}
                   className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white transition-all active:scale-95"
                   style={{background:'linear-gradient(135deg,#2d7070,#1e5050)',boxShadow:'0 4px 12px rgba(30,80,80,0.3)'}}
                 >
-                  <i data-lucide="play" style={{width:'20px',height:'20px',color:'white'}}></i>
+                  <span style={{fontSize:'1rem'}}>&#9654;</span>
                   Play All
                 </button>
+                {cur >= 0 && cur < queue.length && (
+                  <button
+                    onClick={() => {
+                      const p = queue[cur];
+                      if (!p) return;
+                      const key = 'bp:' + p.title + ':' + (p.category || topicalCategory);
+                      const already = prayerFavorites.some(f => f.key === key);
+                      const updated = already
+                        ? prayerFavorites.filter(f => f.key !== key)
+                        : [...prayerFavorites, {key, type:'battle', title: p.title, category: p.category || topicalCategory, prayer: p.prayer, refs: p.refs, audio: p.audio}];
+                      setPrayerFavorites(updated);
+                      try { localStorage.setItem('prayerFavorites', JSON.stringify(updated)); } catch(er) {}
+                    }}
+                    className="py-3 rounded-xl transition-all active:scale-95"
+                    style={{width:'50px',flexShrink:0,background:'rgba(178,216,208,0.6)',fontSize:'1.4rem',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color: cur >= 0 && cur < queue.length && prayerFavorites.some(f => f.key === ('bp:' + queue[cur].title + ':' + (queue[cur].category || topicalCategory))) ? '#e03050' : '#aaa'}}
+                    title="Favorite this prayer"
+                  >&#10084;</button>
+                )}
                 <button
                   onClick={() => { window.speechSynthesis.cancel(); setTopicalCurrentPlaying(-1); setScreen('topical-detail'); }}
                   className="px-5 py-3 rounded-xl font-semibold transition-all active:scale-95"
-                  style={{background:'rgba(178,216,208,0.6)',color:'#1e5050'}}
+                  style={{background:'rgba(178,216,208,0.6)',color:'#1e5050',border:'none',cursor:'pointer'}}
                 >Stop</button>
               </div>
             </div>
@@ -2783,7 +2883,7 @@
               </div>
               <div style={{width:'8px',background:'linear-gradient(180deg,#4a9a9a 0%,#1e5050 100%)',borderRadius:'0 4px 4px 0',flexShrink:0,margin:'8px 0'}}></div>
             </div>
-            <div className="flex gap-3 px-5 py-4 flex-shrink-0" style={{borderTop:'1px solid #ddd4c4'}}>
+            <div className="flex gap-2 px-5 py-4 flex-shrink-0" style={{borderTop:'1px solid #ddd4c4'}}>
               <button
                 onClick={() => speakAt(lovedOnePlayerIdx)}
                 style={{flex:1,background:'linear-gradient(135deg,#4a9a9a,#1e5050)',color:'white',fontWeight:700,border:'none',borderRadius:'12px',padding:'12px',fontSize:'0.95rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'6px'}}
@@ -2796,6 +2896,19 @@
               >
                 <span style={{fontSize:'1rem'}}>&#9632;</span> Stop
               </button>
+              <button
+                onClick={() => {
+                  const key = 'lo:' + person.name;
+                  const already = prayerFavorites.some(f => f.key === key);
+                  const updated = already
+                    ? prayerFavorites.filter(f => f.key !== key)
+                    : [...prayerFavorites, {key, type:'loved-one', name: person.name, gender: person.gender}];
+                  setPrayerFavorites(updated);
+                  try { localStorage.setItem('prayerFavorites', JSON.stringify(updated)); } catch(er) {}
+                }}
+                style={{width:'50px',flexShrink:0,background:'#e8e0d0',border:'1px solid #b8a890',borderRadius:'12px',padding:'12px 6px',fontSize:'1.4rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color: prayerFavorites.some(f => f.key === 'lo:' + person.name) ? '#e03050' : '#aaa'}}
+                title={prayerFavorites.some(f => f.key === 'lo:' + person.name) ? 'Remove from Favorites' : 'Add to Favorites'}
+              >&#10084;</button>
               <button
                 onClick={() => { window.speechSynthesis.cancel(); setScreen('prayer-for-loved-ones'); }}
                 style={{flex:1,background:'#e8e0d0',color:'#2d7070',fontWeight:700,border:'1px solid #b8a890',borderRadius:'12px',padding:'12px',fontSize:'0.95rem',cursor:'pointer'}}
