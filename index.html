@@ -2227,70 +2227,61 @@
                   <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.15}}>REVIVAL APP</span>
                 </div>
               </div>
-              <p style={{fontSize:'1rem',fontWeight:800,color:'#1a1a1a',letterSpacing:'0.1em',marginTop:'4px'}}>MY LIBRARY</p>
+              <p style={{fontSize:'1rem',fontWeight:800,color:'#1a1a1a',letterSpacing:'0.1em',marginTop:'4px'}}>MY PRAYER PLAYLISTS</p>
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-2 hide-scrollbar">
-              {!hasAnything && (
-                <div style={{textAlign:'center',paddingTop:'60px'}}>
-                  <p style={{fontSize:'3rem',marginBottom:'12px'}}>🙏</p>
-                  <p style={{fontWeight:700,color:'#555',marginBottom:'8px'}}>Your library is empty</p>
-                  <p style={{fontSize:'0.85rem',color:'#888',lineHeight:1.5}}>Save Personal Playlists on the Loved Ones page, or tap the heart icon while a prayer is playing to add Favorites.</p>
-                </div>
-              )}
 
-              {personalPlaylists.length > 0 && (
-                <div>
-                  <SectionHeader label="Personal Playlists" />
-                  {personalPlaylists.map((pl, idx) => (
-                    <div key={idx} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px',background:'rgba(74,154,154,0.22)',borderRadius:'10px',padding:'10px 12px',border:'1px solid rgba(74,154,154,0.4)'}}>
-                      <div style={{flex:1}}>
-                        <p style={{fontWeight:800,fontSize:'0.93rem',color:'#1e5050'}}>{pl.name}</p>
-                        <p style={{fontSize:'0.72rem',color:'#667',marginTop:'1px'}}>{pl.people.length} {pl.people.length === 1 ? 'person' : 'people'}</p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setLovedOnes(pl.people);
-                          try { localStorage.setItem('lovedOnes', JSON.stringify(pl.people)); } catch(er) {}
-                          setLovedOnePlayerIdx(0);
-                          setScreen('loved-one-player');
-                        }}
-                        style={{width:'32px',height:'32px',borderRadius:'50%',background:'linear-gradient(135deg,#4a9a9a,#1e5050)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3" /></svg>
-                      </button>
-                      <button
-                        onClick={() => {
-                          const updated = personalPlaylists.filter((_, i) => i !== idx);
-                          setPersonalPlaylists(updated);
-                          try { localStorage.setItem('personalPlaylists', JSON.stringify(updated)); } catch(er) {}
-                        }}
-                        style={{width:'28px',height:'28px',borderRadius:'50%',background:'rgba(180,60,60,0.12)',border:'none',color:'#a03030',fontWeight:900,fontSize:'0.9rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
-                      >x</button>
+              {/* ── Personal Playlists ── */}
+              <SectionHeader label="Personal Playlists" />
+              {personalPlaylists.length === 0 ? (
+                <p style={{fontSize:'0.82rem',color:'#aaa',fontStyle:'italic',marginBottom:'12px',paddingLeft:'4px'}}>No playlists saved yet. Build a Loved Ones list and tap Load to save one.</p>
+              ) : (
+                personalPlaylists.map((pl, idx) => (
+                  <div key={idx} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px',background:'rgba(74,154,154,0.22)',borderRadius:'10px',padding:'10px 12px',border:'1px solid rgba(74,154,154,0.4)'}}>
+                    <div style={{flex:1}}>
+                      <p style={{fontWeight:800,fontSize:'0.93rem',color:'#1e5050'}}>{pl.name}</p>
+                      <p style={{fontSize:'0.72rem',color:'#667',marginTop:'1px'}}>{pl.people.length} {pl.people.length === 1 ? 'person' : 'people'}</p>
                     </div>
-                  ))}
-                </div>
+                    <button
+                      onClick={() => {
+                        setLovedOnes(pl.people);
+                        try { localStorage.setItem('lovedOnes', JSON.stringify(pl.people)); } catch(er) {}
+                        setLovedOnePlayerIdx(0);
+                        setScreen('loved-one-player');
+                      }}
+                      style={{width:'32px',height:'32px',borderRadius:'50%',background:'linear-gradient(135deg,#4a9a9a,#1e5050)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const updated = personalPlaylists.filter((_, i) => i !== idx);
+                        setPersonalPlaylists(updated);
+                        try { localStorage.setItem('personalPlaylists', JSON.stringify(updated)); } catch(er) {}
+                      }}
+                      style={{width:'28px',height:'28px',borderRadius:'50%',background:'rgba(180,60,60,0.12)',border:'none',color:'#a03030',fontWeight:900,fontSize:'0.9rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}
+                    >x</button>
+                  </div>
+                ))
               )}
 
-              {battleFavs.length > 0 && (
+              {/* ── Favorites ── */}
+              <SectionHeader label="Favorites" />
+              {(battleFavs.length === 0 && lovedFavs.length === 0) ? (
+                <p style={{fontSize:'0.82rem',color:'#aaa',fontStyle:'italic',marginBottom:'12px',paddingLeft:'4px'}}>No favorites saved yet. Tap the &#10084; heart while a prayer is playing to add it here.</p>
+              ) : (
                 <div>
-                  <SectionHeader label="Favorite Battle Prayers" />
                   {battleFavs.map((fav) => tileRow(
                     fav.title,
-                    fav.category ? fav.category.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()) : '',
+                    fav.category ? fav.category.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Battle Prayer',
                     () => playBattleFav(fav),
                     () => removeFav(fav.key),
                     'rgba(220,180,180,0.25)'
                   ))}
-                </div>
-              )}
-
-              {lovedFavs.length > 0 && (
-                <div>
-                  <SectionHeader label="Favorite Loved Ones" />
                   {lovedFavs.map((fav) => tileRow(
                     fav.name,
-                    fav.gender === 'female' ? 'Female' : 'Male',
+                    fav.gender === 'female' ? 'Loved One \u2022 Female' : 'Loved One \u2022 Male',
                     () => playLovedFav(fav),
                     () => removeFav(fav.key),
                     'rgba(180,220,210,0.3)'
