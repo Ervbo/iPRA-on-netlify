@@ -1704,6 +1704,8 @@
         } catch(e) { return []; }
       });
       const [showDownloadPopup, setShowDownloadPopup] = useState(false);
+      const [showShareModal, setShowShareModal] = useState(false);
+      const [sharePayload, setSharePayload] = useState({title:'',text:'',url:''});
       const [downloadStatus, setDownloadStatus] = useState('');
       const [downloadOptions, setDownloadOptions] = useState({
         includePdf: false,
@@ -2057,7 +2059,9 @@
         if (typeof prayer.audio === 'string') {
           url = prayer.audio;
         } else {
-          url = prayer.audio[selectedVoice] || prayer.audio.francis || null;
+          // 'michael' recordings are stored under 'alex' key until new files are supplied
+          const voiceKey = selectedVoice === 'michael' ? 'alex' : selectedVoice;
+          url = prayer.audio[voiceKey] || prayer.audio.francis || null;
         }
 
         // Add background music version if enabled
@@ -2066,6 +2070,74 @@
         }
 
         return url;
+      };
+
+      // Share helper — uses Web Share API on mobile, fallback modal on desktop
+      const doShare = async (title, text, url) => {
+        if (navigator.share) {
+          try { await navigator.share({ title, text, url }); return; } catch(e) {}
+        }
+        setSharePayload({ title, text, url });
+        setShowShareModal(true);
+      };
+
+      // Share modal (desktop fallback)
+      const renderShareModal = () => {
+        if (!showShareModal) return null;
+        const { title, text, url } = sharePayload;
+        const encoded = encodeURIComponent(url);
+        const encodedText = encodeURIComponent(text + ' ' + url);
+        const fbUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encoded;
+        const twUrl = 'https://twitter.com/intent/tweet?text=' + encodedText;
+        const mailUrl = 'mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodedText;
+        return (
+          <div
+            onClick={() => setShowShareModal(false)}
+            style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:9999,display:'flex',alignItems:'flex-end',justifyContent:'center'}}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{background:'white',borderRadius:'20px 20px 0 0',width:'100%',maxWidth:'430px',padding:'24px 20px 36px',boxShadow:'0 -4px 30px rgba(0,0,0,0.2)'}}
+            >
+              <div style={{width:'40px',height:'4px',background:'#ddd',borderRadius:'2px',margin:'0 auto 20px'}} />
+              <p style={{fontWeight:800,fontSize:'1rem',color:'#1a1a1a',marginBottom:'6px',textAlign:'center'}}>{title}</p>
+              <p style={{fontSize:'0.8rem',color:'#666',marginBottom:'20px',textAlign:'center',lineHeight:1.4}}>{url}</p>
+              <div style={{display:'flex',gap:'12px',justifyContent:'center',marginBottom:'16px'}}>
+                {/* Facebook */}
+                <a href={fbUrl} target="_blank" rel="noopener noreferrer"
+                  style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'6px',textDecoration:'none',width:'64px'}}
+                >
+                  <div style={{width:'52px',height:'52px',borderRadius:'50%',background:'#1877F2',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                  </div>
+                  <span style={{fontSize:'0.72rem',color:'#333',fontWeight:600}}>Facebook</span>
+                </a>
+                {/* X / Twitter */}
+                <a href={twUrl} target="_blank" rel="noopener noreferrer"
+                  style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'6px',textDecoration:'none',width:'64px'}}
+                >
+                  <div style={{width:'52px',height:'52px',borderRadius:'50%',background:'#000',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  </div>
+                  <span style={{fontSize:'0.72rem',color:'#333',fontWeight:600}}>X / Twitter</span>
+                </a>
+                {/* Email */}
+                <a href={mailUrl}
+                  style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'6px',textDecoration:'none',width:'64px'}}
+                >
+                  <div style={{width:'52px',height:'52px',borderRadius:'50%',background:'#2d7070',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                  </div>
+                  <span style={{fontSize:'0.72rem',color:'#333',fontWeight:600}}>Email</span>
+                </a>
+              </div>
+              <button
+                onClick={() => setShowShareModal(false)}
+                style={{width:'100%',padding:'14px',borderRadius:'12px',background:'#f0ebe0',border:'none',fontWeight:700,fontSize:'0.95rem',color:'#1e5050',cursor:'pointer'}}
+              >Cancel</button>
+            </div>
+          </div>
+        );
       };
 
       // Home Screen
@@ -2169,6 +2241,22 @@
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
                   <span style={{fontSize:'1rem',fontWeight:600,color:'#1a3a3a'}}>Feedback</span>
+                </button>
+                {/* Share App */}
+                <button
+                  onClick={() => doShare(
+                    'iPRA – Personal Revival App',
+                    'Winning Your Spiritual Battles with prayer. Check out the iPRA app!',
+                    'https://ervbo.github.io/iPRA-on-netlify/'
+                  )}
+                  className="w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all active:scale-95"
+                  style={{background:'rgba(178,216,208,0.65)',border:'none'}}
+                >
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2d7070" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                  </svg>
+                  <span style={{fontSize:'1rem',fontWeight:600,color:'#1a3a3a'}}>Share this App</span>
                 </button>
               </div>
             </div>
@@ -2323,30 +2411,50 @@
         const queue = topicalPlayQueue;
         const cur = topicalCurrentPlaying;
 
-        const playAll = () => {
+        const stopAll = () => {
+          if (window._topicalAudio) {
+            window._topicalAudio.pause();
+            window._topicalAudio.onended = null;
+            window._topicalAudio.onerror = null;
+            window._topicalAudio = null;
+          }
           window.speechSynthesis.cancel();
-          const allVoices = window.speechSynthesis.getVoices();
-          const enVoices = allVoices.filter(v => v.lang.startsWith('en'));
-          const voicePrefs = {
-            francis: ['Daniel','Fred','Tom','Gordon','Aaron','Microsoft David'],
-            jewel:   ['Samantha','Karen','Victoria','Moira','Tessa','Microsoft Zira'],
-            michael: ['Daniel','Tom','Fred','Microsoft David','Aaron'],
-          };
-          const prefs = voicePrefs[selectedVoice] || [];
-          let chosen = null;
-          for (const n of prefs) { chosen = enVoices.find(v => v.name.includes(n)); if (chosen) break; }
-          if (!chosen && enVoices.length) chosen = enVoices[0];
+          setTopicalCurrentPlaying(-1);
+        };
 
-          const speakIdx = (i) => {
+        const playAll = () => {
+          stopAll();
+          const playIdx = (i) => {
             if (i >= queue.length) { setTopicalCurrentPlaying(-1); return; }
             setTopicalCurrentPlaying(i);
-            const utter = new SpeechSynthesisUtterance(queue[i].prayer || queue[i].title);
-            utter.rate = 0.85;
-            if (chosen) utter.voice = chosen;
-            utter.onend = () => speakIdx(i + 1);
-            window.speechSynthesis.speak(utter);
+            const url = getAudioUrl(queue[i]);
+            if (url) {
+              const audio = new Audio(url);
+              window._topicalAudio = audio;
+              audio.onended = () => playIdx(i + 1);
+              audio.onerror = () => playIdx(i + 1);
+              audio.play().catch(() => playIdx(i + 1));
+            } else {
+              // Fallback to TTS if no audio URL available
+              const allVoices = window.speechSynthesis.getVoices();
+              const enVoices = allVoices.filter(v => v.lang.startsWith('en'));
+              const voicePrefs = {
+                francis: ['Daniel','Fred','Tom','Gordon','Aaron','Microsoft David'],
+                jewel:   ['Samantha','Karen','Victoria','Moira','Tessa','Microsoft Zira'],
+                michael: ['Daniel','Tom','Fred','Microsoft David','Aaron'],
+              };
+              const prefs = voicePrefs[selectedVoice] || [];
+              let chosen = null;
+              for (const n of prefs) { chosen = enVoices.find(v => v.name.includes(n)); if (chosen) break; }
+              if (!chosen && enVoices.length) chosen = enVoices[0];
+              const utter = new SpeechSynthesisUtterance(queue[i].prayer || queue[i].title);
+              utter.rate = 0.85;
+              if (chosen) utter.voice = chosen;
+              utter.onend = () => playIdx(i + 1);
+              window.speechSynthesis.speak(utter);
+            }
           };
-          speakIdx(0);
+          playIdx(0);
         };
 
         return (
@@ -2427,8 +2535,29 @@
                     title="Favorite this prayer"
                   >&#10084;</button>
                 )}
+                {cur >= 0 && cur < queue.length && (
+                  <button
+                    onClick={() => {
+                      const p = queue[cur];
+                      if (!p) return;
+                      doShare(
+                        p.title,
+                        (p.prayer ? p.prayer.slice(0,120) + '…' : p.title) + '\n\nFrom iPRA – Personal Revival App',
+                        'https://ervbo.github.io/iPRA-on-netlify/'
+                      );
+                    }}
+                    className="py-3 rounded-xl transition-all active:scale-95"
+                    style={{width:'50px',flexShrink:0,background:'rgba(178,216,208,0.6)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}
+                    title="Share this prayer"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2d7070" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                  </button>
+                )}
                 <button
-                  onClick={() => { window.speechSynthesis.cancel(); setTopicalCurrentPlaying(-1); setScreen('topical-detail'); }}
+                  onClick={() => { stopAll(); setScreen('topical-detail'); }}
                   className="px-5 py-3 rounded-xl font-semibold transition-all active:scale-95"
                   style={{background:'rgba(178,216,208,0.6)',color:'#1e5050',border:'none',cursor:'pointer'}}
                 >Stop</button>
@@ -2935,6 +3064,20 @@
                 style={{width:'50px',flexShrink:0,background:'#e8e0d0',border:'1px solid #b8a890',borderRadius:'12px',padding:'12px 6px',fontSize:'1.4rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color: prayerFavorites.some(f => f.key === 'lo:' + person.name) ? '#e03050' : '#aaa'}}
                 title={prayerFavorites.some(f => f.key === 'lo:' + person.name) ? 'Remove from Favorites' : 'Add to Favorites'}
               >&#10084;</button>
+              <button
+                onClick={() => doShare(
+                  'Prayer for ' + person.name,
+                  'Praying for ' + person.name + ' using the iPRA Personal Revival App. Join me!',
+                  'https://ervbo.github.io/iPRA-on-netlify/'
+                )}
+                style={{width:'50px',flexShrink:0,background:'#e8e0d0',border:'1px solid #b8a890',borderRadius:'12px',padding:'12px 6px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}
+                title="Share"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2d7070" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+              </button>
               <button
                 onClick={() => { window.speechSynthesis.cancel(); setScreen('prayer-for-loved-ones'); }}
                 style={{flex:1,background:'#e8e0d0',color:'#2d7070',fontWeight:700,border:'1px solid #b8a890',borderRadius:'12px',padding:'12px',fontSize:'0.95rem',cursor:'pointer'}}
@@ -4588,6 +4731,7 @@
           {screen === 'vignettes' && renderVignettes()}
           {screen === 'vignette-reading' && renderVigetteReadingList()}
           {screen === 'vignette-detail' && renderVignetteDetail()}
+          {renderShareModal()}
         </div>
       );
     }
