@@ -2496,27 +2496,30 @@
 
         return (
           <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
-            <div className="pt-10 px-5 pb-3 safe-top flex-shrink-0" style={{background:'linear-gradient(135deg,#1e5050,#2d7070)'}}>
-              <div className="flex items-end gap-2 mb-1">
-                <span style={{fontFamily:'Georgia,serif',fontWeight:900,fontStyle:'italic',fontSize:'2.4rem',color:'white',lineHeight:1}}>i</span>
-                <span style={{fontWeight:900,fontSize:'2rem',color:'white',letterSpacing:'0.04em',lineHeight:1}}>PRA</span>
-                <div className="ml-1 flex flex-col pb-0.5">
-                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#a8d8d8',letterSpacing:'0.1em',lineHeight:1.15}}>PERSONAL</span>
-                  <span style={{fontSize:'0.7rem',fontWeight:800,color:'#a8d8d8',letterSpacing:'0.1em',lineHeight:1.15}}>REVIVAL APP</span>
+            <div className="pt-10 safe-top flex-shrink-0" style={{background:'linear-gradient(135deg,#1e5050,#2d7070)',display:'flex',alignItems:'stretch',minHeight:'90px'}}>
+              {/* Left: branding */}
+              <div style={{flex:1,padding:'0 20px 12px',display:'flex',flexDirection:'column',justifyContent:'flex-end'}}>
+                <div className="flex items-end gap-2 mb-1">
+                  <span style={{fontFamily:'Georgia,serif',fontWeight:900,fontStyle:'italic',fontSize:'2.4rem',color:'white',lineHeight:1}}>i</span>
+                  <span style={{fontWeight:900,fontSize:'2rem',color:'white',letterSpacing:'0.04em',lineHeight:1}}>PRA</span>
+                  <div className="ml-1 flex flex-col pb-0.5">
+                    <span style={{fontSize:'0.7rem',fontWeight:800,color:'#a8d8d8',letterSpacing:'0.1em',lineHeight:1.15}}>PERSONAL</span>
+                    <span style={{fontSize:'0.7rem',fontWeight:800,color:'#a8d8d8',letterSpacing:'0.1em',lineHeight:1.15}}>REVIVAL APP</span>
+                  </div>
                 </div>
+                <p style={{fontSize:'0.9rem',fontWeight:800,color:'white',letterSpacing:'0.12em',margin:0}}>NOW PLAYING</p>
               </div>
-              <p style={{fontSize:'0.9rem',fontWeight:800,color:'white',letterSpacing:'0.12em',marginTop:'4px'}}>NOW PLAYING</p>
+              {/* Right: category image (addictions only) */}
+              {topicalCategory === 'addictions' && (
+                <div style={{width:'42%',overflow:'hidden',flexShrink:0}}>
+                  <img
+                    src={ADDICTIONS_IMG}
+                    alt="Addictions"
+                    style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',display:'block'}}
+                  />
+                </div>
+              )}
             </div>
-
-            {topicalCategory === 'addictions' && (
-              <div style={{flexShrink:0,width:'100%',maxHeight:'200px',overflow:'hidden'}}>
-                <img
-                  src={ADDICTIONS_IMG}
-                  alt="Addictions"
-                  style={{width:'100%',height:'200px',objectFit:'cover',objectPosition:'center top',display:'block'}}
-                />
-              </div>
-            )}
             <div className="flex-1 overflow-y-auto hide-scrollbar px-4 py-3 space-y-2">
               {queue.map((p, i) => (
                 <div
