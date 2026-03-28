@@ -2029,9 +2029,13 @@
             });
           }
         });
+        const pinned = ["The Lord's Prayer", "The Sinner's Prayer"];
         return all.sort((a, b) => {
-          if (a.title === "The Lord's Prayer") return -1;
-          if (b.title === "The Lord's Prayer") return 1;
+          const ai = pinned.indexOf(a.title);
+          const bi = pinned.indexOf(b.title);
+          if (ai !== -1 && bi !== -1) return ai - bi;
+          if (ai !== -1) return -1;
+          if (bi !== -1) return 1;
           return a.title.localeCompare(b.title);
         });
       };
@@ -2446,7 +2450,7 @@
       // e.g. francis-028-addictions.mp3 -> illustration-028.jpg (all 179 prayers auto-mapped)
       const getIllustrationUrl = (prayer) => {
         if (!prayer || !prayer.audio || !prayer.audio.francis) return null;
-        const m = prayer.audio.francis.match(/francis-(\\d+)-/);
+        const m = prayer.audio.francis.match(/francis-(\d+)-/);
         return m ? 'https://prayer.francisanfuso.com/wp-content/uploads/illustration-' + m[1] + '.jpg' : null;
       };
 
