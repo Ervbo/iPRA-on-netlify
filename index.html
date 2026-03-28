@@ -2617,7 +2617,7 @@
                   <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.15}}>REVIVAL APP</span>
                 </div>
               </div>
-              <p style={{fontSize:'1rem',fontWeight:800,color:'#1a1a1a',letterSpacing:'0.12em',marginTop:'4px'}}>GUIDED PRAYERS</p>
+              <p style={{fontSize:'1rem',fontWeight:800,color:'#1a1a1a',letterSpacing:'0.12em',marginTop:'4px'}}>GUIDED PLAYLISTS</p>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:'2px'}}>
                 <p style={{fontSize:'0.95rem',fontWeight:600,color:'#2d7070',margin:0}}>{cat.name}</p>
                 <button
@@ -2689,7 +2689,7 @@
             <div className="flex-shrink-0 px-4 py-3 safe-bottom" style={{background:'rgba(240,235,224,0.97)',borderTop:'1px solid rgba(178,216,208,0.4)'}}>
               <button onClick={() => setScreen('topical-prayers')} className="flex items-center gap-1 text-sm font-semibold" style={{color:'#2d7070'}}>
                 <i data-lucide="chevron-left" className="w-5 h-5"></i>
-                Guided Prayers
+                Guided Playlists
               </button>
             </div>
           </div>
@@ -2709,7 +2709,7 @@
                   <span style={{fontSize:'0.7rem',fontWeight:800,color:'#2d7070',letterSpacing:'0.1em',lineHeight:1.15}}>REVIVAL APP</span>
                 </div>
               </div>
-              <p style={{fontSize:'1rem',fontWeight:800,color:'#1a1a1a',letterSpacing:'0.12em',marginTop:'4px'}}>GUIDED PRAYERS</p>
+              <p style={{fontSize:'1rem',fontWeight:800,color:'#1a1a1a',letterSpacing:'0.12em',marginTop:'4px'}}>GUIDED PLAYLISTS</p>
             </div>
 
             <div className="px-4 pb-2 flex-shrink-0">
@@ -2940,12 +2940,6 @@
                     style={{width:'28px',height:'28px',borderRadius:'50%',background:'rgba(74,154,154,0.3)',border:'1px solid #4a9a9a',color:'#1e5050',fontWeight:900,fontSize:'1.1rem',cursor:'pointer',lineHeight:1,display:'flex',alignItems:'center',justifyContent:'center'}}
                   >+</button>
                 </div>
-                {[0,1].map(i => (
-                  <div key={'empty-'+i} className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg" style={{background:'rgba(200,210,205,0.15)',border:'1px solid rgba(150,170,165,0.25)'}}>
-                    <span style={{flex:1,borderBottom:'1px solid #bbb',fontSize:'0.9rem',color:'#bbb',fontStyle:'italic',paddingBottom:'2px'}}>loved one's name</span>
-                    <span style={{fontSize:'0.8rem',color:'#bbb'}}>V +</span>
-                  </div>
-                ))}
 
                 <div className="mt-4 mb-4 px-4 py-3 rounded-xl" style={{border:'1.5px solid #b0c4bc',background:'rgba(240,235,224,0.8)',textAlign:'center'}}>
                   {loLoading ? (
