@@ -2496,9 +2496,9 @@
 
         return (
           <div className="flex flex-col h-full" style={{background:'#f0ebe0'}}>
-            <div className="pt-10 safe-top flex-shrink-0" style={{background:'linear-gradient(135deg,#1e5050,#2d7070)',display:'flex',alignItems:'stretch',minHeight:'90px'}}>
-              {/* Left: branding */}
-              <div style={{flex:1,padding:'0 20px 12px',display:'flex',flexDirection:'column',justifyContent:'flex-end'}}>
+            <div className="safe-top flex-shrink-0" style={{background:'linear-gradient(135deg,#1e5050,#2d7070)',position:'relative',display:'flex',alignItems:'stretch',minHeight:'90px',overflow:'hidden'}}>
+              {/* Left: branding — pt-10 applied here so text clears the status bar */}
+              <div style={{flex:1,paddingTop:'40px',paddingLeft:'20px',paddingRight:'20px',paddingBottom:'12px',display:'flex',flexDirection:'column',justifyContent:'flex-end',position:'relative',zIndex:1}}>
                 <div className="flex items-end gap-2 mb-1">
                   <span style={{fontFamily:'Georgia,serif',fontWeight:900,fontStyle:'italic',fontSize:'2.4rem',color:'white',lineHeight:1}}>i</span>
                   <span style={{fontWeight:900,fontSize:'2rem',color:'white',letterSpacing:'0.04em',lineHeight:1}}>PRA</span>
@@ -2509,9 +2509,9 @@
                 </div>
                 <p style={{fontSize:'0.9rem',fontWeight:800,color:'white',letterSpacing:'0.12em',margin:0}}>NOW PLAYING</p>
               </div>
-              {/* Right: category image (addictions only) */}
+              {/* Right: image pinned to all four edges of the header */}
               {topicalCategory === 'addictions' && (
-                <div style={{width:'42%',overflow:'hidden',flexShrink:0}}>
+                <div style={{position:'absolute',top:0,right:0,bottom:0,width:'42%',overflow:'hidden'}}>
                   <img
                     src={ADDICTIONS_IMG}
                     alt="Addictions"
