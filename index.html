@@ -2432,6 +2432,12 @@
         );
       };
 
+      const voicePics = {
+        francis: 'data:image/webp;base64,UklGRogEAABXRUJQVlA4IHwEAABwFACdASpAAEAAPlEijUSjoiEYCgUAOAUEsQBkZZoje9g5QDwXzCAb0UbcjzAdEn6M+Ou9ADpiazT4L+NT3ufbfquIGWjwk7jLjo43/Rvz5fVH/d9w39YOsSvEfN9KgGQ75Kl8L0orycInKcm2FAanKIAS/zULb87nMPQBcaCm7fF88Q2vAmC35a3+sorBBu/ATZH2Jp8nrfLf3m+zOIuu8BRlhSTIvQUYNwAAAP7//k4VtbKVO/7vqfdy+HwYUOm7+/Tq7IVin/WYa6Pxtw8AJ8QnPuZoB2XkQvxHxyIL4X687v6rP8y+7/uXXy2NPDMIA0U5RhAYJFd+LtKOVDAuI67bPhaZ1CHI9h4dSPcQkmEan7lq1W3aqGnaDtyh1TaA+HlHcfx9no30b6Ctzju8rRq8KnU3eCRgXB6jA3oSb7EuB2gG/Ze+TDJ300/y0nA9CL5n4aloWIV0r1/gS8gdcOpzmucIRLzlhDg7mS8dybf1EpweZLT/pabxRxzCAtGdHu5xMOUzHhwO9I/V++fXnV83JAN3me/IPYfFF+LA62K3tWT1ZZEbh/5cWFlDA2vEGMOiGIP1Znn/M1mcqAy7WUt3e0ZH+LgKZNs18xNnCDWHCRrLsKhso9oEi9WEFMprcHuRjJEc/aR2D4W96rec4SMDI0tBUHe7nUaJmmE0JRaS0vCv7RcOZj3Ravu1g9ExNhZypj0cyvl1OIaVkiqNQO3QwrilVANI5W6Z7x6C5sQ2/nI+ccAJKDw+FsJncxYiC4ljVNAPm1FSqcvwuZPpdd6QxyWjP+dQUYN6LJFV/haoo/m/Oy70lea8IXoeRaSuca+8U1afEoq9FOhYn9BtWJc//IcZK1lWTsMPIZuUujEHzfwl1d+i/05/52O/1en5nu+b/f5H6f6LyxY/CP/8TAE2q4l0gbe5V/fpI4f/x8/Z0manXRRoaGr4/Es7Kd/HSZM0HPXdrVnjJEvSpYXVSPZjEH+05rjowspWzPJZJA3gTkkk98xt9WKLBZ/2U6n4qd13vI6WIJFEarYus2kYIlBvtje6ScyjPzrH30aS3TacnFe2CczUTAuxB3ugtJLaBBTfTvdtXV1vdtVInGbr1U8bQL6HOKAfzBXKavRoRsCRBwvjR0OXn3XGPN8sCM6aAsiOS/SFXckYM7ZPfu0iBifnBJnj+r87/JP5NttwJsuPtf0/zI/pdDPq4QRRHGNqC/Kf/rUP+KfoejyO7lrVyOT5Ds/qTxs96iZK3eaSlQqy/BGdHazgzN2JFNjYcPwA6IoAL9Mwr+wL/YGEXe6RvCfUGFknbjcaZGeerfeEIHj8pEueK3HLrnnMZGY17QvTS9uNnJYdVru0Eo0ziuj10PBrRpsQV/0+ieyLopZNDqEUkg1Y8/xRbzAjJ9sTGJ35swcHbA6QNNtEd6PWHpgAuJuT/Kt4LAZE0rUinZ4udN1uFGU/bnHMiD+0X0600fH3Xpuvq7HpcUTml4Ro5A9d0da4qbr7krxZT2aNn3Z6hfu+TbLpGIhrwQAAAA==',
+        jewel:   'data:image/webp;base64,UklGRugEAABXRUJQVlA4INwEAACwFACdASpAAEAAPk0ejEQioaEY+45IKATEsQBOmbtkPKmjZf/dt7tc9ADpaayr4O+Sj3pKpJZ3+ZlLBTgovGAj99DzQD9O+wX+uHWk9B1TTYv1jECXxIv6enpV/JZpijy39f9byYzVopZoos+0q7b2D6TVaKlHZUq1Z1FXcWvA1Q3Sfgoa5EzJDgTgxtzXHYVDMI2qOQbYG99c8k3EgAHAQv3Mshw+Y25p9yI3T9AA/v6UM31sdvweu5SFF7ELMH6KoSW5e/YQUsQZNpzzWcT3oAd8TPPB6boB7Ezdogi7HVz4nyD1LA7AiApWyeNUAZ4NKx2PD+8IBAo9LUWyufZHzZ+GlWVE/0g5Kf4tTnewCnJYM9w3VcU80Mm7HJd25gsmOjTkKcF4LwToLbfPfMRh6t5PJzMmMP1/FGOQx0Ce9O7/YmoeEhQZMyOsW1cN6IyMtMrZMc5yIvXlnZqA/nsH6Cy4OAQM1LbkglVcNfjQUWrlRmc7hskiKY/HtBL0ISnbKpUQurhGtixfkqUaslVhTc9iGtu14hneIrMY44Vw8HshddrgmM22dkSmUWZsHOVXaI+e7KRxOvxe698knL0pjfy8tgylsn06U7bC7u4DhnaaGHpwcZ5Fg+RsZ/3d3MrU7lXxnd5/h1pyRqS83wnk4OUuimDN9qUJZBwt8VJ4vScp/rSEjnqnX9DG/3WkVcJnf7f1fredxBaYKpNxgcwqKm/abBgyY0zCqZwYCbtXlcxE3t4CCT9VgcCZeM7sSxuaFsfZk4zhFTAwLMDRK9eEvuYLS7IUqZ0Zgej5+1JOQ7aucTTTa+P9sXEE14YH7xFnWweGwWvtkbiIHmcKan9K/6C/9/45c9Cc0dcdSBueOeq4UoQVE0VfiNew+SmnLjH/PuwnejQZe4uJSmeeuyIqnxTgNFz0W3w3EW3L1GEIFeWqI6VLRvZmKZ3UMAEcETlBrzWOjvR8lqv78Qpt/Ui8v47pAO+5T1iOQEjzPQn0l2nwqJ1hOYg06ChN5WAqKFbsni0OTON2/eS61TjCluj8hYzH1ZVFK9XHklsuZk/U/4O+Gexrp1ijG01mEDB7ZbhyPKG3r2onpUR1X5CGvmO4RD/pYPlxkajTkk8T8+1b1VsoLkMWfuD+Uyv4rxBmcO5ueVUCDtlfhNdkP4PTTqJR2NdH/bFHSAboHwIVrfCoZlXqaD9uWeNiwzgsX7tCgaHu3K4vBMBih2pE+Rim8N2D4MnmeqQisAxeJeFlK7mP7c1DuEhycb8lnDI5gs19Xt/CDgBr1E2SjKQ96B+YX1Bidm3BBf+Y6vv3AlTkJ+rUHyQfC9nB23eNjz6yZ5/6f9b4NRRmBz/g7pBxWJ79cKkS4QSA2FLS7RPvYITespXWK8KH7RU+nE5yerCt8+RgAnhc1rwVQIzEqP1WB/Fv91CIkH0prM7/fcf063q/GQOOCd3HJzxh7U3s9FJc7ir0DSxi+BFfu9WWxM7NqxJb/C1EYBaFWHTtzYVvzVAv1ATpa7LmTWJJDJ3IJ0ZlXEe8LfzpU/ETuOajf218LUjJDlbfAwH5hGCZohQagXlljdr0SoA35tsz0H3/t/Je8DZ/AA5nGfc7keVgC8Mqc+z0wUf1dGolfoFhcOoYFlKpInJvYOSBxSqTif+pY0AAAA==',
+        michael: 'data:image/webp;base64,UklGRmAEAABXRUJQVlA4IFQEAAAwEgCdASpAAEAAPk0ci0QioaEY/HZIKATEsYBoBfGVLDA4EG2tmnSsq+Avjb91x3jgPqjiOZFDmHOLSN0q00HyN/U3sFfrl/w0vZjnv9l4CQ8fRFSKw9sVaLlqznaW7lOEc8iAzEpyZZtyORf/MxHVM+nj/mzp2qHOAsD8ENw+bOI6N6d0UXvPDR/2hbtWe6JnFo67VmkzALsAAP7+cfz14NUN7OAcbb2bT/6l42tEnAzGPo7uhm44DCWA2ZYtwiExe8EBBGTWlzbOCmeMRDSThuDST8SVDVHqn+r76M0lZ5I0Yh5H4yVjuSQQkE0DuWPxF3hXxd/tUTNf8tUWe2wVATvMB7CbIKO1UtE/S+i0EWNfmsCN4Qe6UufjLsZ+uzsB1zGeox7vo3i1lnFHqEFpYXPjgKek9Dhk1/ozC+33s2JmD8IYw5nRjv+FWLLz7ixmYqWbKG6cuDAXVamdHDZqkOaKuwLNfVn3A7bW7FpTRBinqyrlaoqvjpdXKPwtSJaN73dA2aBAJ/52ul/ZH1ei6/xeS/BZdttI+vwzx1rHES2FWzHv6jp+T0G1KsnPhMbg2tX1n6cg7ttDRGijERPRji80PtKchxPL5NdAKywCvJbtfns95xbsq5tTgRFgStXKK3Ub4xQXZlJ4v7uS6EIwW2FEEFIVEW7fGqgueerRB0/DnHjvOj1EU93IF/vrQEsdcf+9XceJC9fkFNvDv67PGzmf90GbpPzppzsN5pjWkIeTUdvjBvDO+U9Uxc4mh4955o2eab+tMdO4mW/m+fkfSldNi4L3sySfU9//c5x/741REtlQ66BIqrh5ybQjvDqQUVSFQLxzR3697bseeL9PnJpfz9hQSd00qXPj+uvNgDic7PcD+vtILMBcAGET02bNnO2lTX75zKE3e8WXRxcsEp3vXMAphnGApj24p+xr2L/vzhs7NpAQdXkpM+MWN7uejPZIZ8TGb9Xtx6Of6N5YuM2s87NAlyMK7TmhqwCghV/HkFtOfQIfkT9/E7y/GP8tmx/3hZMfeHfj9XAMVkyE+BfRs/eqE36lAvP5joFRRUlkG44p1UuB0bNRs+2LGCoiKGRn9bHLU8JYuIQitLgtFbgBq4SOurwwvDfVqjt+23SlJ3Jg30sQC3DkNp0plRi+sZuMLKaEHMD5FusIORif+lx4+nveuVdK0v1P8uUqwRgBUTnWAJuPj7h66OKWxj8kiVvEW1mCgThqfGOFKv6N2+HjqSfW1aS+9Sv3+fTcMWwaGJnh6JmyqmlwqzoM7JA5/y0KhYpfhFOnGMtnpD7DHhzjm8MG21CBHy2GF2g9B/eJUprGSGC800lUtEVYXBYh0VBw2o1b2YWL35HdY/az9/EI6/wRBYJZP39Z3BVMS0IGg4d9O7U7p1VDLK3APjH08d6K67wsaR6hCA/QpOGHcfmBuvBzPRiPUy79m4a8Jy8c9KiybidsNN8q5lf+LP6kAAAA',
+      };
+
       // Derive illustration URL from each prayer's francis audio URL
       // e.g. francis-028-addictions.mp3 -> illustration-028.jpg (all 179 prayers auto-mapped)
       const getIllustrationUrl = (prayer) => {
@@ -2541,8 +2547,8 @@
                       key={v}
                       onClick={() => { setSelectedVoice(v); try { localStorage.setItem('selectedVoice',v); } catch(e) {} }}
                       className="px-2 py-1 rounded text-xs font-semibold transition-all"
-                      style={{background: selectedVoice===v ? '#2d7070' : 'rgba(178,216,208,0.5)', color: selectedVoice===v ? 'white' : '#1e5050'}}
-                    >{v.charAt(0).toUpperCase()+v.slice(1)}</button>
+                      style={{background: selectedVoice===v ? '#2d7070' : 'rgba(178,216,208,0.5)', color: selectedVoice===v ? 'white' : '#1e5050', display:'flex', alignItems:'center', gap:'5px'}}
+                    ><img src={voicePics[v]} alt={v} style={{width:'24px',height:'24px',borderRadius:'50%',objectFit:'cover',objectPosition:'top',border:'2px solid rgba(255,255,255,0.4)',flexShrink:0,border:'2px solid rgba(255,255,255,0.5)'}} />{v.charAt(0).toUpperCase()+v.slice(1)}</button>
                   ))}
                 </div>
               </div>
@@ -3006,7 +3012,7 @@
             <div className="px-5 py-2 flex-shrink-0 flex items-center gap-3" style={{borderBottom:'1px solid #ddd4c4'}}>
               <span style={{fontSize:'0.85rem',fontWeight:600,color:'#444'}}>Read By</span>
               {['francis','jewel','michael'].map(v => (
-                <label key={v} style={{display:'flex',alignItems:'center',gap:'4px',cursor:'pointer'}}>
+                <label key={v} style={{display:'flex',alignItems:'center',gap:'6px',cursor:'pointer'}}>
                   <input
                     type="radio"
                     name="lo-player-voice"
@@ -3015,6 +3021,7 @@
                     onChange={() => { setSelectedVoice(v); try { localStorage.setItem('selectedVoice', v); } catch(er) {} }}
                     style={{accentColor:'#2d7070'}}
                   />
+                  <img src={voicePics[v]} alt={v} style={{width:'28px',height:'28px',borderRadius:'50%',objectFit:'cover',objectPosition:'top',border:'2px solid rgba(255,255,255,0.4)',flexShrink:0,border:'2px solid #b8d8d0'}} />
                   <span style={{fontSize:'0.85rem',color:'#333'}}>{v.charAt(0).toUpperCase() + v.slice(1)}</span>
                 </label>
               ))}
@@ -3209,6 +3216,7 @@
                           }}
                           className="accent-indigo-600"
                         />
+                        <img src={voicePics[v]} alt={v} style={{width:'26px',height:'26px',borderRadius:'50%',objectFit:'cover',objectPosition:'top',border:'2px solid rgba(255,255,255,0.4)',flexShrink:0,border:'2px solid #b8d8d0'}} />
                         <span className="text-xs font-medium capitalize" style={{color:'#1a3a3a'}}>
                           {v.charAt(0).toUpperCase() + v.slice(1)}
                         </span>
@@ -3712,6 +3720,7 @@
                                 }}
                                 className="accent-indigo-600"
                               />
+                              <img src={voicePics[v]} alt={v} style={{width:'24px',height:'24px',borderRadius:'50%',objectFit:'cover',objectPosition:'top',border:'2px solid rgba(255,255,255,0.4)',flexShrink:0,border:'2px solid #b8d8d0'}} />
                               <span className="text-xs text-gray-600 font-medium capitalize">{v.charAt(0).toUpperCase() + v.slice(1)}</span>
                             </label>
                           ))}
