@@ -103,7 +103,8 @@
       border: 5px solid transparent;
       border-top-color: #4f46e5;
     }
-    .ref-wrap:hover .ref-tip {
+    .ref-wrap:hover .ref-tip,
+    .ref-wrap.active .ref-tip {
       visibility: visible;
       opacity: 1;
     }
@@ -4240,17 +4241,19 @@
       // Bible.com book abbreviations (NLT = version 116)
       const BOOK_ABBREVS = {
         'genesis':'GEN','exodus':'EXO','leviticus':'LEV','numbers':'NUM','deuteronomy':'DEU',
-        'joshua':'JOS','judges':'JDG','ruth':'RUT','1 samuel':'1SA','2 samuel':'2SA',
+        'joshua':'JOS','josh.':'JOS','judges':'JDG','ruth':'RUT','1 samuel':'1SA','2 samuel':'2SA',
         '1 kings':'1KI','2 kings':'2KI','1 chronicles':'1CH','2 chronicles':'2CH',
-        'ezra':'EZR','nehemiah':'NEH','esther':'EST','job':'JOB','psalm':'PSA','psalms':'PSA',
-        'proverbs':'PRO','ecclesiastes':'ECC','song of solomon':'SNG','song':'SNG',
-        'isaiah':'ISA','jeremiah':'JER','lamentations':'LAM','ezekiel':'EZK','daniel':'DAN',
+        'ezra':'EZR','nehemiah':'NEH','esther':'EST','job':'JOB','psalm':'PSA','psalms':'PSA','ps.':'PSA',
+        'proverbs':'PRO','prov.':'PRO','ecclesiastes':'ECC','song of solomon':'SNG','song':'SNG',
+        'isaiah':'ISA','jeremiah':'JER','jer.':'JER','lamentations':'LAM','lam.':'LAM','ezekiel':'EZK','daniel':'DAN',
         'hosea':'HOS','joel':'JOL','amos':'AMO','obadiah':'OBA','jonah':'JON','micah':'MIC',
         'nahum':'NAM','habakkuk':'HAB','zephaniah':'ZEP','haggai':'HAG','zechariah':'ZEC',
-        'malachi':'MAL','matthew':'MAT','mark':'MRK','luke':'LUK','john':'JHN','acts':'ACT',
-        'romans':'ROM','1 corinthians':'1CO','2 corinthians':'2CO','galatians':'GAL',
-        'ephesians':'EPH','philippians':'PHP','colossians':'COL','1 thessalonians':'1TH',
-        '2 thessalonians':'2TH','1 timothy':'1TI','2 timothy':'2TI','titus':'TIT',
+        'malachi':'MAL','matthew':'MAT','matt.':'MAT','mark':'MRK','luke':'LUK','john':'JHN','acts':'ACT',
+        'romans':'ROM','1 corinthians':'1CO','1 cor.':'1CO','2 corinthians':'2CO','2 cor.':'2CO',
+        'galatians':'GAL','gal.':'GAL','ephesians':'EPH','eph.':'EPH',
+        'philippians':'PHP','phil.':'PHP','colossians':'COL','col.':'COL',
+        '1 thessalonians':'1TH','2 thessalonians':'2TH',
+        '1 timothy':'1TI','1 tim.':'1TI','2 timothy':'2TI','2 tim.':'2TI','titus':'TIT',
         'philemon':'PHM','hebrews':'HEB','james':'JAS','1 peter':'1PE','2 peter':'2PE',
         '1 john':'1JN','2 john':'2JN','3 john':'3JN','jude':'JUD','revelation':'REV'
       };
@@ -4278,7 +4281,7 @@
             const idx = parseInt(p2, 10) - 1;
             const refText = (refs && refs[idx]) ? refs[idx] : '';
             if (refText) {
-              return p1 + '<span class="ref-wrap"><sup class="prayer-ref text-indigo-500 font-semibold text-xs">' + p2 + '</sup><span class="ref-tip">' + refText + '</span></span>';
+              return p1 + '<span class="ref-wrap" onclick="var t=this;document.querySelectorAll(\'.ref-wrap.active\').forEach(function(e){if(e!==t)e.classList.remove(\'active\')});t.classList.toggle(\'active\')"><sup class="prayer-ref text-indigo-500 font-semibold text-xs cursor-pointer">' + p2 + '</sup><span class="ref-tip">' + refText + '</span></span>';
             }
             return p1 + '<sup class="prayer-ref text-indigo-500 font-semibold text-xs">' + p2 + '</sup>';
           });
