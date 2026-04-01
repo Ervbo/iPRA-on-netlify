@@ -2915,11 +2915,36 @@
           return 'I claim ' + p.name + ' as God\'s purchased possession, in the name of Jesus Christ, on the basis of His shed blood. I claim the tearing down of all the works of Satan in ' + ph + ' life; all false doctrine, unbelief, temporal values, hatred, resentment, bitterness, and deceitfulness. I claim that each of ' + ph + ' thoughts will be brought into captivity to the obedience of Jesus Christ. And I claim the complete deliverance of ' + p.name + ' from the power and persuasion of the devil. I pray that ' + p.name + ' will be brought into submission, and that ' + ph + ' conscience will be convicted and brought to the point of repentance. I pray that ' + p.name + ' will hear and believe God\'s Word, and that God\'s will and purpose will be accomplished in and through ' + ph + ' life. Thank you Jesus, for hearing and answering my prayer!';
         };
         const prayerText = getPrayerText(person);
-        const speakAt = (idx) => {
-          if (!('speechSynthesis' in window)) return;
+        const stopLoAudio = () => {
           window.speechSynthesis.cancel();
+          if (window._loAudio) { window._loAudio.pause(); window._loAudio.onended = null; window._loAudio = null; }
+        };
+        const speakAt = async (idx) => {
+          stopLoAudio();
           const p = lovedOnes[idx];
           if (!p) return;
+          // Try the Francis Anfuso API first — returns a real MP3 in the chosen voice
+          try {
+            const resp = await fetch('https://prayer.francisanfuso.com/wp-json/prayer/v1/loved-ones', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({name: p.name, type: p.gender, voice: selectedVoice})
+            });
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data && data.file) {
+                const audio = new Audio(data.file);
+                window._loAudio = audio;
+                audio.onended = () => {
+                  if (idx + 1 < lovedOnes.length) { setLovedOnePlayerIdx(idx + 1); speakAt(idx + 1); }
+                };
+                audio.play();
+                return;
+              }
+            }
+          } catch(e) {}
+          // Fallback: device Text-to-Speech
+          if (!('speechSynthesis' in window)) return;
           const text = getPrayerText(p);
           const utter = new SpeechSynthesisUtterance(text);
           utter.rate = 0.85;
@@ -2934,15 +2959,12 @@
           const match = prefs.reduce((found, name) => found || enVoices.find(v => v.name === name), null);
           if (match) utter.voice = match;
           utter.onend = () => {
-            if (idx + 1 < lovedOnes.length) {
-              setLovedOnePlayerIdx(idx + 1);
-              speakAt(idx + 1);
-            }
+            if (idx + 1 < lovedOnes.length) { setLovedOnePlayerIdx(idx + 1); speakAt(idx + 1); }
           };
           window.speechSynthesis.speak(utter);
         };
         const goTo = (idx) => {
-          window.speechSynthesis.cancel();
+          stopLoAudio();
           setLovedOnePlayerIdx(idx);
         };
         const parts = person.name ? prayerText.split(person.name) : [prayerText];
@@ -3011,7 +3033,7 @@
                 <span style={{fontSize:'1rem'}}>&#9654;</span> Play
               </button>
               <button
-                onClick={() => window.speechSynthesis.cancel()}
+                onClick={() => stopLoAudio()}
                 style={{flex:1,background:'#e8e0d0',color:'#1a1a1a',fontWeight:700,border:'1px solid #b8a890',borderRadius:'12px',padding:'12px',fontSize:'0.95rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'6px'}}
               >
                 <span style={{fontSize:'1rem'}}>&#9632;</span> Stop

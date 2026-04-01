@@ -1,5 +1,5 @@
-// Prayer Battles - Service Worker v19
-const CACHE_NAME = 'prayer-battles-v33';
+// Prayer Battles - Service Worker v20
+const CACHE_NAME = 'prayer-battles-v34';
 
 const STATIC_ASSETS = [
   '/',
