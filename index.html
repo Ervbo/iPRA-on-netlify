@@ -28,6 +28,9 @@
   <!-- jsPDF for PDF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+  <!-- JSZip for ZIP download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <!-- Blue Letter Bible ScriptTagger — hover to see full verse text -->
   <script src='https://www.blueletterbible.org/assets/scripts/blbToolTip/BLB_ScriptTagger-min.js' type='text/javascript'></script>
   <script type='text/javascript'>
@@ -1563,6 +1566,7 @@
           return saved ? JSON.parse(saved) : [];
         } catch(e) { return []; }
       });
+      const [editingPlaylistIdx, setEditingPlaylistIdx] = useState(-1); // -1 = new, ≥0 = editing existing
       const [prayerFavorites, setPrayerFavorites] = useState(() => {
         try {
           const saved = localStorage.getItem('prayerFavorites');
@@ -1930,8 +1934,8 @@
         if (typeof prayer.audio === 'string') {
           url = prayer.audio;
         } else {
-          // 'michael' recordings are stored under 'alex' key until new files are supplied
-          const voiceKey = selectedVoice;
+          // 'michael' recordings are stored under 'alex' key in the database
+          const voiceKey = selectedVoice === 'michael' ? 'alex' : selectedVoice;
           url = prayer.audio[voiceKey] || prayer.audio.francis || null;
         }
 
@@ -2092,7 +2096,7 @@
                 </button>
                 {/* Prayer for Loved Ones */}
                 <button
-                  onClick={() => { setLovedOnes([]); setScreen('prayer-for-loved-ones'); }}
+                  onClick={() => { setLovedOnes([]); setEditingPlaylistIdx(-1); setScreen('prayer-for-loved-ones'); }}
                   className="rounded-2xl transition-all active:scale-95"
                   style={{background:'linear-gradient(145deg,#4a9a9a 0%,#1e5050 100%)',aspectRatio:'1',boxShadow:'0 4px 16px rgba(30,80,80,0.3)',padding:'18px',display:'flex',flexDirection:'column',justifyContent:'space-between',alignItems:'flex-start'}}
                 >
@@ -2233,6 +2237,7 @@
                       onClick={() => {
                         setLovedOnes([...pl.people]);
                         try { localStorage.setItem('lovedOnes', JSON.stringify(pl.people)); } catch(er) {}
+                        setEditingPlaylistIdx(idx);
                         setScreen('prayer-for-loved-ones');
                       }}
                       title="Edit playlist"
@@ -2683,7 +2688,23 @@
         };
         const handleLoad = () => {
           if (lovedOnes.length === 0) return;
+          // When editing an existing playlist, pre-fill its name
+          if (editingPlaylistIdx >= 0 && personalPlaylists[editingPlaylistIdx]) {
+            setNewPlaylistName(personalPlaylists[editingPlaylistIdx].name);
+          }
           setShowSaveDialog(true);
+        };
+        const updateExistingPlaylist = () => {
+          // Overwrite the entry we came from
+          const updated = personalPlaylists.map((pl, i) =>
+            i === editingPlaylistIdx ? {name: pl.name, people: [...lovedOnes]} : pl
+          );
+          setPersonalPlaylists(updated);
+          try { localStorage.setItem('personalPlaylists', JSON.stringify(updated)); } catch(er) {}
+          setNewPlaylistName('');
+          setShowSaveDialog(false);
+          setEditingPlaylistIdx(-1);
+          goToPlayer();
         };
         const savePlaylist = () => {
           const name = newPlaylistName.trim();
@@ -2693,6 +2714,7 @@
           try { localStorage.setItem('personalPlaylists', JSON.stringify(updated)); } catch(er) {}
           setNewPlaylistName('');
           setShowSaveDialog(false);
+          setEditingPlaylistIdx(-1);
           goToPlayer();
         };
         const deletePlaylist = (idx) => {
@@ -2706,6 +2728,7 @@
           setLovedOnePlayerIdx(0);
           setScreen('loved-one-player');
         };
+        const isEditing = editingPlaylistIdx >= 0 && !!personalPlaylists[editingPlaylistIdx];
         return (
           <div className="flex flex-col h-full" style={{background:'#f0ebe0',position:'relative'}}>
 
@@ -2713,28 +2736,62 @@
             {showSaveDialog && (
               <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',zIndex:50,display:'flex',alignItems:'center',justifyContent:'center',padding:'24px'}}>
                 <div style={{background:'#f0ebe0',borderRadius:'20px',padding:'28px 24px',width:'100%',maxWidth:'340px',boxShadow:'0 8px 32px rgba(0,0,0,0.25)'}}>
-                  <p style={{fontWeight:800,fontSize:'1.1rem',color:'#1a1a1a',marginBottom:'6px',textAlign:'center'}}>Save as Personal Playlist?</p>
-                  <p style={{fontSize:'0.85rem',color:'#555',textAlign:'center',marginBottom:'20px',lineHeight:1.5}}>Give this list a name so you can use it again later.</p>
-                  <input
-                    type="text"
-                    value={newPlaylistName}
-                    onChange={(e) => setNewPlaylistName(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && newPlaylistName.trim()) savePlaylist(); }}
-                    placeholder="e.g. Family, Suffering, Church..."
-                    autoFocus={true}
-                    style={{width:'100%',padding:'12px 14px',borderRadius:'10px',border:'2px solid #4a9a9a',fontSize:'1rem',fontWeight:600,color:'#1a1a1a',background:'white',outline:'none',marginBottom:'16px',boxSizing:'border-box'}}
-                  />
-                  <div style={{display:'flex',gap:'10px'}}>
-                    <button
-                      onClick={() => { setShowSaveDialog(false); setNewPlaylistName(''); goToPlayer(); }}
-                      style={{flex:1,padding:'12px',borderRadius:'10px',border:'1.5px solid #b8a890',background:'#e8e0d0',color:'#555',fontWeight:700,fontSize:'0.9rem',cursor:'pointer'}}
-                    >Skip, just play</button>
-                    <button
-                      onClick={savePlaylist}
-                      disabled={!newPlaylistName.trim()}
-                      style={{flex:1,padding:'12px',borderRadius:'10px',border:'none',background: newPlaylistName.trim() ? 'linear-gradient(135deg,#4a9a9a,#1e5050)' : '#ccc',color:'white',fontWeight:700,fontSize:'0.9rem',cursor: newPlaylistName.trim() ? 'pointer' : 'not-allowed'}}
-                    >Save &amp; Play</button>
-                  </div>
+                  {isEditing ? (
+                    <>
+                      <p style={{fontWeight:800,fontSize:'1.1rem',color:'#1a1a1a',marginBottom:'6px',textAlign:'center'}}>Save Changes?</p>
+                      <p style={{fontSize:'0.85rem',color:'#555',textAlign:'center',marginBottom:'20px',lineHeight:1.5}}>
+                        Update <strong>{personalPlaylists[editingPlaylistIdx].name}</strong> with your changes, or save as a new playlist.
+                      </p>
+                      <button
+                        onClick={updateExistingPlaylist}
+                        style={{width:'100%',padding:'13px',borderRadius:'10px',border:'none',background:'linear-gradient(135deg,#4a9a9a,#1e5050)',color:'white',fontWeight:700,fontSize:'0.95rem',cursor:'pointer',marginBottom:'10px'}}
+                      >Update "{personalPlaylists[editingPlaylistIdx].name}"</button>
+                      <input
+                        type="text"
+                        value={newPlaylistName}
+                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && newPlaylistName.trim()) savePlaylist(); }}
+                        placeholder="Or type a new name to save a copy..."
+                        style={{width:'100%',padding:'12px 14px',borderRadius:'10px',border:'2px solid #4a9a9a',fontSize:'0.9rem',fontWeight:600,color:'#1a1a1a',background:'white',outline:'none',marginBottom:'10px',boxSizing:'border-box'}}
+                      />
+                      <div style={{display:'flex',gap:'10px'}}>
+                        <button
+                          onClick={() => { setShowSaveDialog(false); setNewPlaylistName(''); setEditingPlaylistIdx(-1); goToPlayer(); }}
+                          style={{flex:1,padding:'11px',borderRadius:'10px',border:'1.5px solid #b8a890',background:'#e8e0d0',color:'#555',fontWeight:700,fontSize:'0.85rem',cursor:'pointer'}}
+                        >Skip, just play</button>
+                        <button
+                          onClick={savePlaylist}
+                          disabled={!newPlaylistName.trim()}
+                          style={{flex:1,padding:'11px',borderRadius:'10px',border:'none',background: newPlaylistName.trim() ? 'linear-gradient(135deg,#4a9a9a,#1e5050)' : '#ccc',color:'white',fontWeight:700,fontSize:'0.85rem',cursor: newPlaylistName.trim() ? 'pointer' : 'not-allowed'}}
+                        >Save as New</button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p style={{fontWeight:800,fontSize:'1.1rem',color:'#1a1a1a',marginBottom:'6px',textAlign:'center'}}>Save as Personal Playlist?</p>
+                      <p style={{fontSize:'0.85rem',color:'#555',textAlign:'center',marginBottom:'20px',lineHeight:1.5}}>Give this list a name so you can use it again later.</p>
+                      <input
+                        type="text"
+                        value={newPlaylistName}
+                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && newPlaylistName.trim()) savePlaylist(); }}
+                        placeholder="e.g. Family, Suffering, Church..."
+                        autoFocus={true}
+                        style={{width:'100%',padding:'12px 14px',borderRadius:'10px',border:'2px solid #4a9a9a',fontSize:'1rem',fontWeight:600,color:'#1a1a1a',background:'white',outline:'none',marginBottom:'16px',boxSizing:'border-box'}}
+                      />
+                      <div style={{display:'flex',gap:'10px'}}>
+                        <button
+                          onClick={() => { setShowSaveDialog(false); setNewPlaylistName(''); goToPlayer(); }}
+                          style={{flex:1,padding:'12px',borderRadius:'10px',border:'1.5px solid #b8a890',background:'#e8e0d0',color:'#555',fontWeight:700,fontSize:'0.9rem',cursor:'pointer'}}
+                        >Skip, just play</button>
+                        <button
+                          onClick={savePlaylist}
+                          disabled={!newPlaylistName.trim()}
+                          style={{flex:1,padding:'12px',borderRadius:'10px',border:'none',background: newPlaylistName.trim() ? 'linear-gradient(135deg,#4a9a9a,#1e5050)' : '#ccc',color:'white',fontWeight:700,fontSize:'0.9rem',cursor: newPlaylistName.trim() ? 'pointer' : 'not-allowed'}}
+                        >Save &amp; Play</button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -3338,13 +3395,40 @@
                     Choose how to download your {totalChecked} selected prayer{totalChecked !== 1 ? 's' : ''}
                   </p>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       setShowDownloadPopup(false);
-                      setDownloadStatus('Preparing individual audio files\u2026');
-                      setTimeout(() => {
-                        setDownloadStatus('\u2713 Individual audio files are ready on the website');
-                        setTimeout(() => setDownloadStatus(''), 4000);
-                      }, 1500);
+                      const prayers = allPrayers.filter(p => guidedChecked[p.title + ':' + p.category]);
+                      if (prayers.length === 0) return;
+                      setDownloadStatus('Building ZIP… 0 of ' + prayers.length);
+                      try {
+                        const zip = new JSZip();
+                        let count = 0;
+                        for (const p of prayers) {
+                          const url = getAudioUrl(p);
+                          if (url) {
+                            try {
+                              const resp = await fetch(url);
+                              const blob = await resp.blob();
+                              const safe = p.title.replace(/[^a-z0-9 _-]/gi, '_');
+                              zip.file((count + 1).toString().padStart(2,'0') + '_' + safe + '.mp3', blob);
+                            } catch(e) { /* skip unreachable file */ }
+                          }
+                          count++;
+                          setDownloadStatus('Building ZIP… ' + count + ' of ' + prayers.length);
+                        }
+                        const content = await zip.generateAsync({type:'blob'});
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(content);
+                        a.download = 'iPRA_Prayers.zip';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+                        setDownloadStatus('✓ ZIP downloaded — ' + prayers.length + ' prayer' + (prayers.length !== 1 ? 's' : ''));
+                      } catch(e) {
+                        setDownloadStatus('Download failed. Try again.');
+                      }
+                      setTimeout(() => setDownloadStatus(''), 5000);
                     }}
                     style={{width:'100%',display:'flex',alignItems:'flex-start',gap:'14px',padding:'16px',borderRadius:'14px',border:'2px solid #e5e7eb',background:'white',cursor:'pointer',marginBottom:'10px',textAlign:'left'}}
                   >
@@ -3355,28 +3439,28 @@
                     </div>
                     <div>
                       <p style={{fontSize:'15px',fontWeight:'600',color:'#111827',marginBottom:'2px'}}>Individual ZIP</p>
-                      <p style={{fontSize:'12px',color:'#6b7280',lineHeight:'1.4'}}>One audio file per prayer — packaged as a ZIP archive</p>
+                      <p style={{fontSize:'12px',color:'#6b7280',lineHeight:'1.4'}}>One MP3 per prayer — all packaged in a single ZIP file</p>
                     </div>
                   </button>
                   <button
                     onClick={() => {
                       setShowDownloadPopup(false);
-                      setDownloadStatus('Preparing group audio\u2026');
-                      setTimeout(() => {
-                        setDownloadStatus('\u2713 Group file is ready on the website');
-                        setTimeout(() => setDownloadStatus(''), 4000);
-                      }, 1500);
+                      const queue = allPrayers.filter(p => guidedChecked[p.title + ':' + p.category]);
+                      if (queue.length === 0) return;
+                      setTopicalPlayQueue(queue);
+                      setTopicalCurrentPlaying(-1);
+                      setScreen('topical-play');
                     }}
                     style={{width:'100%',display:'flex',alignItems:'flex-start',gap:'14px',padding:'16px',borderRadius:'14px',border:'2px solid #e5e7eb',background:'white',cursor:'pointer',marginBottom:'20px',textAlign:'left'}}
                   >
                     <div style={{width:'40px',height:'40px',borderRadius:'10px',background:'#e6f4f4',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2d7070" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                        <polygon points="5 3 19 12 5 21 5 3"/>
                       </svg>
                     </div>
                     <div>
-                      <p style={{fontSize:'15px',fontWeight:'600',color:'#111827',marginBottom:'2px'}}>Group</p>
-                      <p style={{fontSize:'12px',color:'#6b7280',lineHeight:'1.4'}}>All prayers joined into one continuous audio file</p>
+                      <p style={{fontSize:'15px',fontWeight:'600',color:'#111827',marginBottom:'2px'}}>Play All</p>
+                      <p style={{fontSize:'12px',color:'#6b7280',lineHeight:'1.4'}}>Stream all selected prayers back-to-back on the Now Playing screen</p>
                     </div>
                   </button>
                   <button
